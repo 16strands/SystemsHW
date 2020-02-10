@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     // std::cout << "Mean time per coordinate : " << time2 << "us" << std::endl;
     // std::cout << "Final checksum: " << std::to_string(chksum) << std::endl;
     std::cout << size << ", " << time2 << ", " << std::to_string(chksum)<< std::endl;
-    
+
     return 0;
 };
 
