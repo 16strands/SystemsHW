@@ -11,3 +11,6 @@ to compile.
 
 ### Part 2
 
+![alt text](https://github.com/16strands/SystemsHW/blob/master/HW1/graph.png "graph")
+
+### Part 3
