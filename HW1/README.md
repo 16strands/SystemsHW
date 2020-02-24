@@ -33,5 +33,5 @@ Log scale graph:
     
 2. My L1 and L2 cache times were approximately correct, but since I have a 3rd cache on my machine, my later reads were faster than the values we're supposed to compare to.
 
-3. My cache sizes are: ![alt text](https://github.com/16strands/SystemsHW/blob/master/HW1/cachesizes.png "cache sizes"), which aligns mostly with my guesses. I wasn't sure what the `4 x 32 KB` notation meant, but I assumed that I should just multiply and add accordingly. 
+3. My cache sizes are: ![alt text](https://github.com/16strands/SystemsHW/blob/master/HW1/cachesizes.png "cache sizes") This aligns mostly with my guesses. I wasn't sure what the `4 x 32 KB` notation meant, but I assumed that I should just multiply and add accordingly. 
 
