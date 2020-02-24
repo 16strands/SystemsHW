@@ -11,10 +11,21 @@ to compile.
 
 ### Part 2
 
+Regular scale graph:
+
 ![alt text](https://github.com/16strands/SystemsHW/blob/master/HW1/graph.png "graph")
+
+Log scale graph:
+
+![alt text](https://github.com/16strands/SystemsHW/blob/master/HW1/logscale.png "log scale graph")
+
 
 ### Part 3
 
-L1: It looks like my L1 cache size is around 262 KB, based on the fact that the first notable jump in times is around then. I think that if I had made the change (shuffling vs randomly filling the list, mentioned in Part 1), the difference may have been more noticeable. 
+_My general method for guessing here was to look for changes in slope in the log scale graph, and then subtract a little to account for the data that would have been hit in the earlier caches_.
 
-L2: My L2 cache is probably around 
+L1: It looks like my L1 cache size is around 262 KB, based on the fact that the first notable jump in times is around then. I think that if I had made the change (shuffling vs randomly filling the list, mentioned in Part 1), the difference may have been more noticeable. But, looking at the log scale version of the graph, there is a visible change in the slope of the graph at around that point. 
+
+L2: My L2 cache is probably around 1000 KB, given that there is another visible change in slope at that point in the log scale graph.
+
+L3: 
