@@ -77,13 +77,3 @@ int main(int argc, char *argv[]){
     delete[] access_points;
     return curr;
 }
-
-/* Questions:
- * Should the buffer be populated or does it not matter?
- */
-
-/* Notes:
- * Randomize accesses to confuse prefetcher - but make it fast so that it doesn't mess up time measurements
- * Repeat measurements and take the lowest
- * For each iteration, read the entire buffer
- */
