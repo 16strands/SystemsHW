@@ -14,3 +14,7 @@ to compile.
 ![alt text](https://github.com/16strands/SystemsHW/blob/master/HW1/graph.png "graph")
 
 ### Part 3
+
+L1: It looks like my L1 cache size is around 262 KB, based on the fact that the first notable jump in times is around then. I think that if I had made the change (shuffling vs randomly filling the list, mentioned in Part 1), the difference may have been more noticeable. 
+
+L2: My L2 cache is probably around 
