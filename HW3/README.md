@@ -3,7 +3,7 @@
 
 ### Our Tests
 
-The tests in our test files have pretty good code coverage. For each test we call a makeCache function, which, unless other arguments are included, makes a cache of size 2048 and populates it with a single key/value pair, <“apple”, “four”>. This cache object uses our fifo_evictor. We then call several other functions to ensure functionality.
+The tests in our test files have pretty good code coverage. For each test we call a makeCache function, which, unless other arguments are included, makes a cache of size 2048 and populates it with a single key/value pair, <“apple”, “four”>. This cache object uses our fifo_evictor. We then call several other functions to ensure functionality. 
 
 | Test Name | Description | Status |
 | --------- | ----------- | ------ |
@@ -66,4 +66,4 @@ Their code is very hard to read, so it was hard to find what went wrong here.
 | testEvictorWithFullCache | ? |
 | testEvictorEvictingSameItemTwice | ? | 
 
-
+This code had compiler errors, even when using the given makefile. The code would have benefitted from using type definitions. Some of the errors we saw involved the shared_ptr they used, and it was very very hard to change all instances of their shared_ptr to a working type. 
