@@ -3,6 +3,7 @@
 #include <boost/program_options.hpp>
 #include <string>
 #include <iostream>
+#include <memory>
 
 namespace po = boost::program_options;
 
@@ -13,6 +14,7 @@ int main(int argc, char** argv){
     unsigned short port;
     int threads;
 
+    // optional command line arguments with flags and default values
     // got this logic from https://stackoverflow.com/questions/11280136/optional-command-line-arguments
     po::options_description desc("Options for my program");
     desc.add_options()
@@ -29,13 +31,22 @@ int main(int argc, char** argv){
             ("threads,t", po::value<int>(& threads)->default_value(1),
                     "number of threads")
             ;
-
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    std::cout<<maxmem<<std::endl;
-    std::cout<<server<<std::endl;
-    std::cout<<port<<std::endl;
-    std::cout<<threads<<std::endl;
+    // turn server into address object
+    auto const address = net::ip::make_address(server);
+    auto const doc_root = std::make_shared<std::string>(".");
+
+    // The io_context is required for all I/O
+    net::io_context ioc{threads};
+
+    // Create and launch a listening port
+    std::make_shared<listener>(
+            ioc,
+            tcp::endpoint{address, port},
+            doc_root)->run();
+
+
 }
