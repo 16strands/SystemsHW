@@ -140,10 +140,9 @@ int main(int argc, char** argv){
         start_accept();        
     }
 
-    boost::bind()
 
     //now bind to the acceptor?????????????????
-    acceptor.bind(this_server_endpoint);
+//    acceptor.bind(this_server_endpoint);
 
 
     // Create and launch a listening port
