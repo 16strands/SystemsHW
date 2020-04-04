@@ -1,58 +1,5 @@
 // cache_server.cc
 
-#include <boost/program_options.hpp>
-#include <string>
-#include <iostream>
-#include <memory>
-#include "cache.hh"
-
-
-using key_type = std::string;
-using val_type = std::string;
-using tcp = boost::asio::ip::tcp;
-
-
-namespace po = boost::program_options;
-
-
-
-
-//GET should take a key type and return a value type
-val_type GET(key_type key) 
-{
-    return "";
-}
-
-//PUT puts a value in a key
-//sets in the cache 
-void PUT(key_type key, val_type value)
-{ //from eitan's in class example, when he went to s.e.rv.e.r:PORT/key, it showed the value
-    //this puts it in the internet
-
-    //we somehow need to put the vlaue in subdirectory "key" of our server and port
-}
-
-void DELETE(key_value key)
-{
-    //deletes the key
-}
-
-//this returns just the head, no body
-std::pair<int, std::string> HEAD()
-{
-    return std::pair<int,std::string>(0,"");
-}
-
-//resets the cache?
-void POST(std::string argument)
-{
-    //if the argument isn't reset, then do nothing
-    if(argument == reset) {
-        cache.reset();
-    }
-}
-
-
 //we need to listen to that port. 
 //figure out how to listen to ports
 
@@ -77,6 +24,10 @@ void POST(std::string argument)
 //
 //------------------------------------------------------------------------------
 
+#include "cache.hh"
+#include "fifo_evictor.hh"
+
+#include <boost/program_options.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
@@ -95,6 +46,7 @@ void POST(std::string argument)
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
 namespace net = boost::asio;            // from <boost/asio.hpp>
+namespace po = boost::program_options;
 using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 
 // Return a reasonable mime type based on the extension of a file.
@@ -169,7 +121,7 @@ template<
     class Send>
 void
 handle_request(
-    Cache cache_root,
+    Cache& cache_root,
     http::request<Body, http::basic_fields<Allocator>>&& req,
     Send&& send)
 {
@@ -214,39 +166,52 @@ handle_request(
 
     // Make sure we can handle the method
     if( req.method() != http::verb::get &&
-        req.method() != http::verb::head)
+        req.method() != http::verb::put &&
+        req.method() != http::verb::delete_ &&
+        req.method() != http::verb::head &&
+        req.method() != http::verb::post)
         return send(bad_request("Unknown HTTP-method"));
 
-    // Request path must be absolute and not contain "..".
-    if( req.target().empty() ||
-        req.target()[0] != '/' ||
-        req.target().find("..") != beast::string_view::npos)
-        return send(bad_request("Illegal request-target"));
+    // Respond to GET request
+    if(req.method() == http::verb::get) {
+        Cache::key_type key = req.body().substr(1);
+        Cache::size_type size;
+        Cache::val_type val = cache_root.get(key, size);
+        if (val != nullptr) {
+            http::response <http::file_body> res;
+            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+            std::string value(val);
+            std::string content = "{ \"" + key + "\" : \"" + value + "\" }";\
+            res.body = content;
+            res.set(http::field::content_type, "application/json");
+            res.content_length(content.size() + 1);
+            res.keep_alive(req.keep_alive());
+            return send(std::move(res));
+        }
+        return send(not_found(key));
+    }
 
-    // Build the path to the requested file
-    std::string path = path_cat(doc_root, req.target());
-    if(req.target().back() == '/')
-        path.append("index.html");
+    // Respond to PUT request
+    if (req.method() == http::verb::put){
+        // Get the key and value out of request object
+        Cache::key_type key = req.body().substr(1);
+        std::string value = key.substr(key.find("/") + 1);
+        Cache::val_type val = new char[value.size() + 1];
+        strcpy(val, value.c_str());
+        key = key.substr(0,key.find("/"));
+        // put them in the cache
+        Cache::size_type size = value.size + 1;
+        cache_root.set(key, val, size);
+        Cache::size_type other_size;
+        if (cache_root.get(key, other_size)){
 
-    // Attempt to open the file
-    beast::error_code ec;
-    http::file_body::value_type body;
-    body.open(path.c_str(), beast::file_mode::scan, ec);
+        }
 
-    // Handle the case where the file doesn't exist
-    if(ec == beast::errc::no_such_file_or_directory)
-        return send(not_found(req.target()));
+    }
 
-    // Handle an unknown error
-    if(ec)
-        return send(server_error(ec.message()));
-
-    // Cache the size since we need it after the move
-    auto const size = body.size();
 
     // Respond to HEAD request
-    if(req.method() == http::verb::head)
-    {
+    if(req.method() == http::verb::head) {
         http::response<http::empty_body> res{http::status::ok, req.version()};
         res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
         res.set(http::field::content_type, mime_type(path));
@@ -255,16 +220,6 @@ handle_request(
         return send(std::move(res));
     }
 
-    // Respond to GET request
-    http::response<http::file_body> res{
-        std::piecewise_construct,
-        std::make_tuple(std::move(body)),
-        std::make_tuple(http::status::ok, req.version())};
-    res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-    res.set(http::field::content_type, mime_type(path));
-    res.content_length(size);
-    res.keep_alive(req.keep_alive());
-    return send(std::move(res));
 }
 
 //------------------------------------------------------------------------------
@@ -318,7 +273,7 @@ class session : public std::enable_shared_from_this<session>
 
     beast::tcp_stream stream_;
     beast::flat_buffer buffer_;
-    std::shared_ptr<std::string const> doc_root_;
+    std::shared_ptr<Cache> cache_root_;
     http::request<http::string_body> req_;
     std::shared_ptr<void> res_;
     send_lambda lambda_;
@@ -426,7 +381,7 @@ class listener : public std::enable_shared_from_this<listener>
 {
     net::io_context& ioc_;
     tcp::acceptor acceptor_;
-    std::shared_ptr<std::string const> doc_root_;
+    std::shared_ptr<Cache> cache_root_;
 
 public:
     listener(
@@ -521,7 +476,7 @@ int main(int argc, char** argv){
     int maxmem;
     std::string server;
     unsigned short port;
-    int threads;
+    const int threads;
 
     // optional command line arguments with flags and default values
     // got this logic from https://stackoverflow.com/questions/11280136/optional-command-line-arguments
@@ -553,12 +508,9 @@ int main(int argc, char** argv){
 
     // turn server into address object
     auto const address = net::ip::make_address(server);
-    auto const doc_root = std::make_shared<std::string>(".");
-
 
     //instead of a document, we have a cache
     auto const cache_root = std::make_shared<Cache>(server_cache);
-    auto const threads = std::max<int>(1, std::atoi(argv[4]));
 
     // The io_context is required for all I/O
     net::io_context ioc{threads};
@@ -582,14 +534,8 @@ int main(int argc, char** argv){
 
     return EXIT_SUCCESS;
 
-
-    //now bind to the acceptor?????????????????
-//    acceptor.bind(this_server_endpoint);
-
-
-    // Create and launch a listening port
-    std::make_shared<listener>(
-            ioc,
-            tcp::endpoint{address, port},
-            doc_root)->run();
 }
+
+// implement handle request function
+// method requests are urls
+// set some things right after cache construction so that we can test GET alone
