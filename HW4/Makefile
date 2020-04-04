@@ -7,7 +7,7 @@ BOOSTLIB=-L/usr/local/Cellar/boost/1.72.0_1/lib -lboost_program_options
 
 all:  cache_server test_cache_lib test_cache_client test_evictors
 
-cache_server: cache_server.o cache.o
+cache_server: cache_server.o cache.o fifo_evictor.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LIBS) $(BOOSTLIB)
 
 test_evictors: test_evictors.o fifo_evictor.o

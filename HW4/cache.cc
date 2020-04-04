@@ -124,6 +124,8 @@ Cache::Cache(size_type maxmem,
 	pImpl_ (new Impl(maxmem,max_load_factor,evictor,hasher))
 	{}
 
+Cache::~Cache(){};
+
 void Cache::set(key_type key, val_type val, size_type size)
 {
 	//finds a space in data where we can put things

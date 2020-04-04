@@ -512,13 +512,13 @@ int main(int argc, char** argv){
     //make fifo evictor
     Fifo_Evictor* fifo_evictor = new Fifo_Evictor();
     //here we make the cache
-    Cache server_cache = Cache(maxmem,0.75,fifo_evictor);
+//    Cache server_cache = Cache(maxmem,0.75,fifo_evictor);
 
     // turn server into address object
     auto const address = net::ip::make_address(server);
 
     //instead of a document, we have a cache
-    auto const cache_root = std::make_shared<Cache>(server_cache);
+    std::shared_ptr<Cache> cache_root(new Cache(maxmem,0.75,fifo_evictor));
 
     // The io_context is required for all I/O
     net::io_context ioc{threads};
