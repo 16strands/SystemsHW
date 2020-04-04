@@ -140,15 +140,16 @@ handle_request(
 
     // Respond to GET request
     if(req.method() == http::verb::get) {
-        Cache::key_type key = req.body().substr(1);
+        key_type key = req.body().substr(1);
         Cache::size_type size;
         Cache::val_type val = cache_root.get(key, size);
         if (val != nullptr) {
-            http::response <http::file_body> res;
+            http::response <http::file_body> res{http::status::ok, req.version()};
             res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
             std::string value(val);
             std::string content = "{ \"" + key + "\" : \"" + value + "\" }";\
-            res.body = content;
+            res.set(http::field::body, content);
+            res.insert("space_used", cache_root.space_used());
             res.set(http::field::content_type, "application/json");
             res.content_length(content.size() + 1);
             res.keep_alive(req.keep_alive());
@@ -160,33 +161,74 @@ handle_request(
     // Respond to PUT request
     if (req.method() == http::verb::put){
         // Get the key and value out of request object
-        Cache::key_type key = req.body().substr(1);
+        key_type key = req.body().substr(1);
         std::string value = key.substr(key.find("/") + 1);
-        Cache::val_type val = new char[value.size() + 1];
-        strcpy(val, value.c_str());
+        char* val = new char[value.size() + 1];
+        std::strcpy(val, value.c_str());
         key = key.substr(0,key.find("/"));
         // put them in the cache
-        Cache::size_type size = value.size + 1;
+        Cache::size_type size = value.size() + 1;
         cache_root.set(key, val, size);
         Cache::size_type other_size;
         if ((cache_root.get(key, other_size) != nullptr) && (other_size == size)){
-            http::response<http::empty_body> res{http::status::ok, req.version()}; // TODO: make this give a 200 response
+            http::response<http::empty_body> res{http::status::created, req.version()};
+            res.set(http::field::content_type, "application/json");
+            res.insert("space_used", cache_root.space_used());
+//            res.content_length(0);
+            res.keep_alive(req.keep_alive());
+            return send(std::move(res));
         }
+        return send(server_error(key));
 
+    }
+
+    // Respond to DELETE request
+    if(req.method() == http::verb::delete_) {
+        key_type key = req.body().substr(1);
+        bool success = cache_root.del(key);
+        if (success) {
+            http::response <http::empty_body> res{http::status::accepted, req.version()};
+            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+            res.insert("space_used", cache_root.space_used());
+            res.set(http::field::content_type, "application/json");
+//            res.content_length(0);
+            res.keep_alive(req.keep_alive());
+            return send(std::move(res));
+        }
+        return send(not_found(key));
     }
 
 
     // Respond to HEAD request
     if(req.method() == http::verb::head) {
-        http::response<http::empty_body> res{http::status::ok, req.version()};
+        http::response<http::empty_body> res{http::status::accepted, req.version()};
+        res.insert("space_used", cache_root.space_used());
         res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-        res.set(http::field::content_type, mime_type(path));
-        res.content_length(size);
+        res.set(http::field::content_type, "application/json");
+//        res.content_length(0);
         res.keep_alive(req.keep_alive());
         return send(std::move(res));
     }
 
+    if(req.method() == http::verb::post) {
+        std::string request_target = req.body().substr(1);
+        if (request_target == "reset") {
+            cache_root.reset();
+            if (cache_root.space_used() == 0) {
+                http::response <http::file_body> res{http::status::ok, req.version()};
+                res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+                res.insert("space_used", cache_root.space_used());
+                res.set(http::field::content_type, "application/json");
+//                res.content_length(content.size() + 1);
+                res.keep_alive(req.keep_alive());
+                return send(std::move(res));
+            }
+        }
+        return send(not_found(request_target));
+    }
 }
+
+
 
 //------------------------------------------------------------------------------
 
@@ -442,7 +484,7 @@ int main(int argc, char** argv){
     int maxmem;
     std::string server;
     unsigned short port;
-    const int threads;
+    int threads;
 
     // optional command line arguments with flags and default values
     // got this logic from https://stackoverflow.com/questions/11280136/optional-command-line-arguments
