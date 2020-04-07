@@ -10,6 +10,7 @@
 #include <string>
 #include <algorithm>
 #include <iostream>
+#include <cassert>
 
 using cache_val_type = std::shared_ptr<Cache::byte_type>;
 using map_val_type = std::pair<Cache::size_type,cache_val_type>;
@@ -123,6 +124,16 @@ Cache::Cache(size_type maxmem,
         hash_func hasher):
 	pImpl_ (new Impl(maxmem,max_load_factor,evictor,hasher))
 	{}
+
+
+Cache::Cache(std::string host, 
+        std::string port)
+{
+	(void) host;
+	(void) port;
+	assert(false);
+}
+
 
 Cache::~Cache(){};
 
