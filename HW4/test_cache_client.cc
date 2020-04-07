@@ -8,7 +8,7 @@
 
 //creates a socket to the server
 auto makeCache(std::string host = "127.0.0.1", std::string port = "2020"){
-    Cache my_cache = Cache( host, port);
+    Cache* my_cache = new Cache( host, port);
     return my_cache;
 }
 
