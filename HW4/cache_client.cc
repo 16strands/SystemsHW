@@ -26,55 +26,125 @@ namespace net = boost::asio;        // from <boost/asio.hpp>
 using tcp = net::ip::tcp;           // from <boost/asio/ip/tcp.hpp>
 
 
-void sendRequest(http::request req, beast::tcp_stream stream){
-    // Send the HTTP request to the remote host
-    http::write(stream, req);
+class Cache::Impl
+{
+private:
 
-    // This buffer is used for reading and must be persisted
-    beast::flat_buffer buffer;
-
-    // Declare a container to hold the response
-    http::response<http::dynamic_body> res;
-
-    // Receive the HTTP response
-    http::read(stream, buffer, res);
-
-    // Write the message to standard out
-    std::cout << res << std::endl;
-}
-
-Cache::Cache(std::string host, std::string port){
-    // The io_context is required for all I/O
+    std::string host_;
+    std::string port_; 
     net::io_context ioc;
-
     // These objects perform our I/O
     tcp::resolver resolver(ioc);
     beast::tcp_stream stream(ioc);
 
-    auto const results = resolver.resolve(server_ip, port);
+    
+public:
 
-    // Make the connection on the IP address we get from a lookup
-    stream.connect(results);
+    Impl(std::string host,
+        std::string port) :
+        host_(host), port_(port)
+    {
 
-}
+        auto const results = resolver.resolve(host, port);
 
-Cache::~Cache(){};
+        // Make the connection on the IP address we get from a lookup
+        stream.connect(results);
+    }
 
-void Cache::set(key_type key, val_type val, size_type size)
-{
-    //finds a space in data where we can put things
-    s
-    http::request<http::string_body> req;
-    req.version(11);
-    req.method(http::verb::put);
-    std::string val_s(val);
-    req.target("/"+key+"/"+val_s);
-    req.set(http::field::host, host);
-    req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+    void sendRequest(http::request req){
+        // Send the HTTP request to the remote host
+        http::write(stream, req);
 
-    sendRequest(req, stream);
+        // This buffer is used for reading and must be persisted
+        beast::flat_buffer buffer;
 
-}
+        // Declare a container to hold the response
+        http::response<http::dynamic_body> res;
+
+        // Receive the HTTP response
+        http::read(stream, buffer, res);
+
+        // Write the message to standard out
+        std::cout << res << std::endl;
+    }
+
+    void set(key_type key, Cache::val_type val, Cache::size_type size)
+    {
+        http::request<http::empty_body> req;
+        req.version(11);
+        req.method(http::verb::put);
+        std::string val_s(val);
+        req.target("/"+key+"/"+val_s);
+        req.set(http::field::host, host);
+        req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+
+        sendRequest(req);
+    }
+
+    void get(key_type key, Cache::size_type& val_size)
+    {
+        http::request<http::empty_body> req;
+        req.version(11);
+        req.method(http::verb::get);
+        req.target("/"+key);
+        req.set(http::field::host, host);
+        req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+
+        sendRequest(req);
+    }
+
+    void del(key_type key)
+    {
+        http::request<http::empty_body> req;
+        req.version(11);
+        req.method(http::verb::delete_);
+        req.target("/"+key);
+        req.set(http::field::host, host);
+        req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+
+        sendRequest(req);
+    }
+
+    void space_used()
+    {
+        http::request<http::empty_body> req;
+        req.version(11);
+        req.method(http::verb::head);
+        req.set(http::field::host, host);
+        req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+
+        sendRequest(req);
+    }
+
+    // Reset will set the mCache variable to a new unordered map, writing over the other one
+    void reset() 
+    {
+        http::request<http::empty_body> req;
+        req.version(11);
+        req.method(http::verb::post);
+        req.target("/reset");
+        req.set(http::field::host, host);
+        req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+
+        sendRequest(req);
+    }
+
+};
+
+
+
+
+
+
+Cache::Cache(std::string host, 
+        std::string port):
+    pImpl_ (new Impl(host, port))
+{}
+
+
+Cache::~Cache()
+{}
+
 
 Cache::val_type Cache::get(key_type key, size_type& val_size) const
 {
@@ -87,7 +157,7 @@ bool Cache::del(key_type key)
 {
 
     return pImpl_ -> del(key);
-
+    
 }
 
 //all unused space should be '\0'
@@ -101,6 +171,11 @@ void Cache::reset()
 {
     pImpl_ -> reset();
 }
+
+
+
+
+
 
 // Performs an HTTP GET and prints the response
 int main(int argc, char** argv)
