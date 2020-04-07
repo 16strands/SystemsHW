@@ -190,6 +190,12 @@ Cache::Cache(maxmem, max_load_factor, evictor, hasher) = delete;
 Cache::~Cache()
 {}
 
+void Cache::set(key_type key, val_type val, size_type size)
+{
+    //finds a space in data where we can put things
+    pImpl_ -> set(key, val, size);
+
+}
 
 Cache::val_type Cache::get(key_type key, size_type& val_size) const
 {
