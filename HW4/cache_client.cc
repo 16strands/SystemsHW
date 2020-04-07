@@ -99,7 +99,9 @@ public:
 
         
         // Write the message to standard out
-        std::string value = res.body().substr(res.body().find(":")+2,res.body().size()-3);
+        std::string body(res.body());
+
+        std::string value = body.substr(body.find(":")+2,body.size()-3);
         return value;
     }
 
