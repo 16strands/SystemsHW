@@ -17,6 +17,7 @@ bool testGet(bool DEBUG_PRINT_MESSAGES){
     auto my_cache = makeCache();
     Cache::size_type size;
     auto ret = (my_cache->get("apple", size));
+    std::string p(ret);
     if (DEBUG_PRINT_MESSAGES) {
         std::cout << ret << std::endl;
     }
@@ -80,10 +81,11 @@ bool testSameKey(bool DEBUG_PRINT_MESSAGES)
     Cache::size_type size;
     my_cache->set("apple", value, 4);
     auto ret = (my_cache->get("apple", size));
+    std::string p(ret);
     if (DEBUG_PRINT_MESSAGES) {
         std::cout << ret << std::endl;
     }
-    return (ret == "six");
+    return (p == "six");
 }
 
 
@@ -118,11 +120,14 @@ bool testEvictorWithFullCache(bool DEBUG_PRINT_MESSAGES)
     if(DEBUG_PRINT_MESSAGES) std::cout<<"hearts should've been added, hearts_gotten is "<< hearts_gotten <<"."<<std::endl;
     if(DEBUG_PRINT_MESSAGES) std::cout<<"compare hearts_gotten to hearts, which is "<<hearts<<"."<<std::endl;
 
+    std::string hearts_gotten_str(hearts_gotten);
+    std::string diamonds_gotten_str(hearts_gotten);
+
     //test that spades are removed
     //check that diamonds are still there
-    bool hearts_in_cache = (hearts_gotten == "QJx");
-    bool diamonds_in_cache = (diamonds_gotten == "KJxx");
-    bool spades_not_in_cache = (spades_gotten == "");
+    bool hearts_in_cache = (hearts_gotten_str == "QJx");
+    bool diamonds_in_cache = (diamonds_gotten_str == "KJxx");
+    bool spades_not_in_cache = (spades_gotten == nullptr);
 
     return (hearts_in_cache && diamonds_in_cache && spades_not_in_cache);
 
