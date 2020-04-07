@@ -25,6 +25,12 @@ class Cache {
   // A function that takes a key and returns an index to the internal data
   using hash_func = std::function<std::size_t(key_type)>;
 
+  // There are two possible constructors, one for a cache object (library),
+  // that initializes the actual cache store, and another for a client
+  // that simply accesses the Cache store over the network. The two
+  // constructors are mutually exclusive: implement one and assert(0) in the other.
+
+
   // Create a new cache object with the following parameters:
   // maxmem: The maximum allowance for storage used by values.
   // max_load_factor: Maximum allowed ratio between buckets and table rows.
@@ -35,6 +41,9 @@ class Cache {
         float max_load_factor = 0.75,
         Evictor* evictor = nullptr,
         hash_func hasher = std::hash<key_type>());
+
+  // Create a new Cache networked client with a given host and port.
+  Cache(std::string host, std::string port);
 
   ~Cache();
 
