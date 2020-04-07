@@ -192,9 +192,11 @@ Cache::~Cache()
 
 Cache::val_type Cache::get(key_type key, size_type& val_size) const
 {
-
-    return pImpl_ -> get(key, val_size).get();
-
+    std::string value = pImpl_ -> get(key, val_size);
+    char* val = new char[value.size() + 1];
+    std::strcpy(val, value.c_str());
+    val_size = value.size() + 1;
+    return val;
 }
 
 bool Cache::del(key_type key)
