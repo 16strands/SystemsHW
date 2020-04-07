@@ -175,7 +175,7 @@ void Cache::reset()
 
 
 
-
+#if 0
 
 // Performs an HTTP GET and prints the response
 int main(int argc, char** argv)
