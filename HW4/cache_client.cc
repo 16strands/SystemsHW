@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <iostream>
+#include <cassert>
 
 using cache_val_type = std::shared_ptr<Cache::byte_type>;
 using map_val_type = std::pair<Cache::size_type,cache_val_type>;
@@ -99,7 +100,7 @@ public:
 
         
         // Write the message to standard out
-        std::string body(res.body());
+        std::string body = boost::beast::buffers_to_string(res.body().data());
 
         std::string value = body.substr(body.find(":")+2,body.size()-3);
         return value;
@@ -175,17 +176,21 @@ public:
 
 };
 
-
-
-
-
-
 Cache::Cache(std::string host, 
         std::string port):
     pImpl_ (new Impl(host, port))
 {}
 
-Cache::Cache(maxmem, max_load_factor, evictor, hasher) = delete;
+Cache::Cache(size_type maxmem,
+             float max_load_factor,
+             Evictor* evictor,
+             hash_func hasher){
+    (void) maxmem;
+    (void) max_load_factor;
+    (void) evictor;
+    (void) hasher;
+    assert(false);
+}
 
 Cache::~Cache()
 {}
@@ -223,89 +228,4 @@ Cache::size_type Cache::space_used() const
 void Cache::reset()
 {
     pImpl_ -> reset();
-}
-
-
-
-
-#if 0
-
-// Performs an HTTP GET and prints the response
-int main(int argc, char** argv)
-{
-    try
-    {
-        // Check command line arguments.
-        std::string server_ip;
-        std::string port;
-
-        // optional command line arguments with flags and default values
-        // got this logic from https://stackoverflow.com/questions/11280136/optional-command-line-arguments
-        po::options_description desc("Options for my program");
-        desc.add_options()
-                // Option 'server' and 's' are equivalent.
-                ("server_ip,s", po::value<std::string>(& server_ip)->default_value("127.0.0.1"),
-                 "server address")
-                // Option 'port' and 'p' are equivalent.
-                ("port,p", po::value<std::string>(& port)->default_value("2020"),
-                 "port number")
-                ;
-
-        po::variables_map vm;
-        po::store(po::parse_command_line(argc, argv, desc), vm);
-        po::notify(vm);
-        int version = 11;
-        std::string target = "/";
-
-        // The io_context is required for all I/O
-        net::io_context ioc;
-
-        // These objects perform our I/O
-        tcp::resolver resolver(ioc);
-        beast::tcp_stream stream(ioc);
-
-        // Look up the domain name
-        auto const results = resolver.resolve(server_ip, port);
-
-        // Make the connection on the IP address we get from a lookup
-        stream.connect(results);
-
-        // Set up an HTTP GET request message
-        http::request<http::string_body> req{http::verb::get, target, version};
-        req.set(http::field::host, server_ip);
-        req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-
-        // Send the HTTP request to the remote host
-        http::write(stream, req);
-
-        // This buffer is used for reading and must be persisted
-        beast::flat_buffer buffer;
-
-        // Declare a container to hold the response
-        http::response<http::dynamic_body> res;
-
-        // Receive the HTTP response
-        http::read(stream, buffer, res);
-
-        // Write the message to standard out
-        std::cout << res << std::endl;
-
-        // Gracefully close the socket
-        beast::error_code ec;
-        stream.socket().shutdown(tcp::socket::shutdown_both, ec);
-
-        // not_connected happens sometimes
-        // so don't bother reporting it.
-        //
-        if(ec && ec != beast::errc::not_connected)
-            throw beast::system_error{ec};
-
-        // If we get here then the connection is closed gracefully
-    }
-    catch(std::exception const& e)
-    {
-        std::cerr << "Error: " << e.what() << std::endl;
-        return EXIT_FAILURE;
-    }
-    return EXIT_SUCCESS;
 }

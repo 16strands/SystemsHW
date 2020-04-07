@@ -19,7 +19,7 @@ test_cache_lib: test_cache_lib.o cache.o fifo_evictor.o
 test_cache_client: test_cache_client.o cache_client.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-cache_client: cache_client.o
+cache_client: cache_client.o cache.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LIBS) $(BOOSTLIB)
 
 %.o: %.cc %.hh

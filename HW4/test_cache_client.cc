@@ -4,7 +4,9 @@
 #include <iostream>
 #include <string>
 #include <cassert>
+#include <boost/program_options.hpp>
 
+namespace po = boost::program_options;
 
 //creates a socket to the server
 auto makeCache(std::string host = "127.0.0.1", std::string port = "2020"){
@@ -93,7 +95,7 @@ bool testSameKey(bool DEBUG_PRINT_MESSAGES)
 bool testEvictorWithFullCache(bool DEBUG_PRINT_MESSAGES)
 {
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing evicting from a full array and putting something new in"<<std::endl;
-    auto my_cache = makeCache(13);
+    auto my_cache = makeCache();
     // i like bridge
     char spades[]{ "AK10xxx" };
     my_cache->set("spades", spades, 8);
@@ -121,7 +123,7 @@ bool testEvictorWithFullCache(bool DEBUG_PRINT_MESSAGES)
     if(DEBUG_PRINT_MESSAGES) std::cout<<"compare hearts_gotten to hearts, which is "<<hearts<<"."<<std::endl;
 
     std::string hearts_gotten_str(hearts_gotten);
-    std::string diamonds_gotten_str(hearts_gotten);
+    std::string diamonds_gotten_str(diamonds_gotten);
 
     //test that spades are removed
     //check that diamonds are still there
@@ -138,7 +140,7 @@ bool testEvictorWithFullCache(bool DEBUG_PRINT_MESSAGES)
 bool testEvictorEvictingSameItemTwice(bool DEBUG_PRINT_MESSAGES)
 {
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing what happens when the same key is in the evictor twice, and we need to remove things twice."<<std::endl;
-    auto my_cache = makeCache(9);
+    auto my_cache = makeCache();
     char value[]{ "six" };
     my_cache->set("apple", value, 4);
 
@@ -197,9 +199,6 @@ int main(int argc, char** argv)
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
-    int version = 11;
-
-
 
     assert(testGet(false));
     assert(testGetNull(false));
