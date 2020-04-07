@@ -34,8 +34,8 @@ private:
     std::string port_; 
     net::io_context ioc;
     // These objects perform our I/O
-    tcp::resolver resolver(ioc);
-    beast::tcp_stream stream(ioc);
+    tcp::resolver resolver = tcp::resolver(ioc);
+    beast::tcp_stream stream = beast::tcp_stream(ioc);
 
     
 public:
@@ -44,14 +44,13 @@ public:
         std::string port) :
         host_(host), port_(port)
     {
-
         auto const results = resolver.resolve(host, port);
 
         // Make the connection on the IP address we get from a lookup
         stream.connect(results);
     }
 
-    void sendRequest(http::request req){
+    void sendRequest(http::request<http::empty_body> req){
         // Send the HTTP request to the remote host
         http::write(stream, req);
 
@@ -75,8 +74,10 @@ public:
         req.method(http::verb::put);
         std::string val_s(val);
         req.target("/"+key+"/"+val_s);
-        req.set(http::field::host, host);
+        req.set(http::field::host, host_);
         req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+
+        (void) size;
 
         sendRequest(req);
     }
@@ -87,8 +88,10 @@ public:
         req.version(11);
         req.method(http::verb::get);
         req.target("/"+key);
-        req.set(http::field::host, host);
+        req.set(http::field::host, host_);
         req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+
+        (void) val_size;
 
         sendRequest(req);
     }
@@ -99,7 +102,7 @@ public:
         req.version(11);
         req.method(http::verb::delete_);
         req.target("/"+key);
-        req.set(http::field::host, host);
+        req.set(http::field::host, host_);
         req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
         sendRequest(req);
@@ -110,7 +113,7 @@ public:
         http::request<http::empty_body> req;
         req.version(11);
         req.method(http::verb::head);
-        req.set(http::field::host, host);
+        req.set(http::field::host, host_);
         req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
         sendRequest(req);
@@ -123,7 +126,7 @@ public:
         req.version(11);
         req.method(http::verb::post);
         req.target("/reset");
-        req.set(http::field::host, host);
+        req.set(http::field::host, host_);
         req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
         sendRequest(req);
