@@ -185,6 +185,7 @@ Cache::Cache(std::string host,
     pImpl_ (new Impl(host, port))
 {}
 
+Cache::Cache(maxmem, max_load_factor, evictor, hasher) = delete;
 
 Cache::~Cache()
 {}
