@@ -52,9 +52,6 @@ public:
     }
 
     ~Impl()
-    {}
-
-    void close()
     {
         beast::error_code ec;
 
@@ -213,7 +210,6 @@ Cache::Cache(size_type maxmem,
 }
 
 Cache::~Cache() {
-    pImpl_->close();
 }
 
 void Cache::set(key_type key, val_type val, size_type size)
