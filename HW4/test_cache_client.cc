@@ -13,19 +13,32 @@ auto makeCache(std::string host = "127.0.0.1", std::string port = "2020"){
     std::cout<<"Making a new cache"<<std::endl;
     Cache* my_cache = new Cache(host, port);
     std::cout<<"Cache has been initialized"<<std::endl;
+    char value[]{ "six" };
+    my_cache->set("apple", value, 4);
+    std::cout<<"Apple has been set"<<std::endl;
     return my_cache;
 }
 
 bool testGet(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing putting and getting something from the cache"<<std::endl;
     auto my_cache = makeCache(host, port);
+    std::cout<<"made a cache"<<std::endl;
     Cache::size_type size;
     auto ret = (my_cache->get("apple", size));
+    std::cout<<"apple retrieved"<<std::endl;
     std::string p(ret);
+    std::cout<<"ret is now a string  "<<p<<std::endl;
     if (DEBUG_PRINT_MESSAGES) {
         std::cout << ret << std::endl;
     }
-    delete my_cache;
+    try{
+        std::cout<<"trying to delete my_cache"<<std::endl;
+        delete my_cache;
+        std::cout<<"deleted cache"<<std::endl;
+    }
+    catch (int e){
+        std::cout<<"Cache has been deleted"<<std::endl;
+    }
     return (p == "four");
 }
 
@@ -220,6 +233,7 @@ int main(int argc, char** argv)
     assert(testSameKey(false, server_ip, port));
     assert(testEvictorWithFullCache(false, server_ip, port));
     assert(testEvictorEvictingSameItemTwice(false, server_ip, port));
+
 
     std::cout<<"all tests pass!"<<std::endl;
     return 0;

@@ -142,6 +142,7 @@ handle_request(
     // Respond to GET request
     if(req.method() == http::verb::get) {
         std::string key(req.target().data());
+        key = key.substr(1);
         Cache::size_type size;
         Cache::val_type val = cache_root.get(key, size);
         if (val != nullptr) {
@@ -154,6 +155,7 @@ handle_request(
             res.set(http::field::content_type, "application/json");
             res.content_length(content.size() + 1);
             res.keep_alive(req.keep_alive());
+            res.prepare_payload();
             return send(std::move(res));
         }
         return send(not_found(key));
@@ -163,12 +165,14 @@ handle_request(
     if (req.method() == http::verb::put){
         // Get the key and value out of request object
         std::string key(req.target().data());
+        key = key.substr(1);
         std::string value = key.substr(key.find("/") + 1);
         char* val = new char[value.size() + 1];
         std::strcpy(val, value.c_str());
         key = key.substr(0,key.find("/"));
         // put them in the cache
         Cache::size_type size = value.size() + 1;
+        std::cout<<"PUT key is "<<key<<" val is "<<val<<std::endl;
         cache_root.set(key, val, size);
         Cache::size_type other_size;
         if ((cache_root.get(key, other_size) != nullptr) && (other_size == size)){
@@ -177,6 +181,7 @@ handle_request(
             res.insert("space_used", cache_root.space_used());
 //            res.content_length(0);
             res.keep_alive(req.keep_alive());
+            res.prepare_payload();
             return send(std::move(res));
         }
         return send(server_error(key));
@@ -186,6 +191,7 @@ handle_request(
     // Respond to DELETE request
     if(req.method() == http::verb::delete_) {
         std::string key(req.target().data());
+        key = key.substr(1);
         bool success = cache_root.del(key);
         if (success) {
             http::response <http::empty_body> res{http::status::accepted, req.version()};
@@ -194,6 +200,7 @@ handle_request(
             res.set(http::field::content_type, "application/json");
 //            res.content_length(0);
             res.keep_alive(req.keep_alive());
+            res.prepare_payload();
             return send(std::move(res));
         }
         return send(not_found(key));
@@ -208,11 +215,13 @@ handle_request(
         res.set(http::field::content_type, "application/json");
 //        res.content_length(0);
         res.keep_alive(req.keep_alive());
+        res.prepare_payload();
         return send(std::move(res));
     }
 
     if(req.method() == http::verb::post) {
         std::string request_target(req.target().data());
+        request_target = request_target.substr(1);
         if (request_target == "reset") {
             cache_root.reset();
             if (cache_root.space_used() == 0) {
@@ -222,6 +231,7 @@ handle_request(
                 res.set(http::field::content_type, "application/json");
 //                res.content_length(content.size() + 1);
                 res.keep_alive(req.keep_alive());
+                res.prepare_payload();
                 return send(std::move(res));
             }
         }
@@ -262,6 +272,7 @@ class session : public std::enable_shared_from_this<session>
             // The lifetime of the message has to extend
             // for the duration of the async operation so
             // we use a shared_ptr to manage it.
+//            std::cout<<"sending  "<<msg.body()<<std::endl;
             auto sp = std::make_shared<
                 http::message<isRequest, Body, Fields>>(std::move(msg));
 
@@ -315,6 +326,7 @@ public:
     void
     do_read()
     {
+        std::cout<<"in do_read"<<std::endl;
         // Make the request empty before reading,
         // otherwise the operation behavior is undefined.
         req_ = {};
@@ -334,14 +346,18 @@ public:
         beast::error_code ec,
         std::size_t bytes_transferred)
     {
+        std::cout<<"in on_read"<<std::endl;
         boost::ignore_unused(bytes_transferred);
 
         // This means they closed the connection
-        if(ec == http::error::end_of_stream)
+        if(ec == http::error::end_of_stream) {
+            std::cout << "end of stream (see server line 346)" << std::endl;
             return do_close();
+        }
 
-        if(ec)
+        if(ec) {
             return fail(ec, "read");
+        }
 
         // Send the response
         handle_request(*cache_root_, std::move(req_), lambda_);
@@ -353,11 +369,13 @@ public:
         beast::error_code ec,
         std::size_t bytes_transferred)
     {
+        std::cout<<"in on_write"<<std::endl;
         boost::ignore_unused(bytes_transferred);
 
         if(ec)
             return fail(ec, "write");
 
+//        close = false;
         if(close)
         {
             // This means we should close the connection, usually because
@@ -375,6 +393,7 @@ public:
     void
     do_close()
     {
+        std::cout<<"in do_close"<<std::endl;
         // Send a TCP shutdown
         beast::error_code ec;
         stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
