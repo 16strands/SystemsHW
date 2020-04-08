@@ -9,7 +9,6 @@
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <cstdlib>
-#include <iostream>
 #include <string>
 #include <map>
 #include <unordered_map>
@@ -35,8 +34,8 @@ private:
     std::string port_; 
     net::io_context ioc;
     // These objects perform our I/O
-    tcp::resolver resolver = tcp::resolver(ioc);
-    beast::tcp_stream stream = beast::tcp_stream(ioc);
+    tcp::resolver resolver{ioc};
+    beast::tcp_stream stream{ioc};
 
     
 public:
@@ -49,7 +48,24 @@ public:
 
         // Make the connection on the IP address we get from a lookup
         stream.connect(results);
+        std::cout<<"Client connected "<<std::endl;
     }
+
+    ~Impl(){
+        beast::error_code ec;
+
+        stream.socket().shutdown(tcp::socket::shutdown_both, ec);
+
+        // not_connected happens sometimes so don't bother reporting it.
+        if(ec && ec != beast::errc::not_connected)
+            fail(ec, "shutdown");
+        }
+
+    void
+    fail(beast::error_code ec, char const* what)	{
+
+        std::cerr << what << ": " 	<< ec.message() << "\n";	}
+
 
     void set(key_type key, Cache::val_type val, Cache::size_type size)
     {
@@ -192,8 +208,8 @@ Cache::Cache(size_type maxmem,
     assert(false);
 }
 
-Cache::~Cache()
-{}
+Cache::~Cache() {
+}
 
 void Cache::set(key_type key, val_type val, size_type size)
 {

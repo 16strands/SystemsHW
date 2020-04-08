@@ -10,64 +10,72 @@ namespace po = boost::program_options;
 
 //creates a socket to the server
 auto makeCache(std::string host = "127.0.0.1", std::string port = "2020"){
-    Cache* my_cache = new Cache( host, port);
+    std::cout<<"Making a new cache"<<std::endl;
+    Cache* my_cache = new Cache(host, port);
+    std::cout<<"Cache has been initialized"<<std::endl;
     return my_cache;
 }
 
-bool testGet(bool DEBUG_PRINT_MESSAGES){
+bool testGet(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing putting and getting something from the cache"<<std::endl;
-    auto my_cache = makeCache();
+    auto my_cache = makeCache(host, port);
     Cache::size_type size;
     auto ret = (my_cache->get("apple", size));
     std::string p(ret);
     if (DEBUG_PRINT_MESSAGES) {
         std::cout << ret << std::endl;
     }
+    delete my_cache;
     return (p == "four");
 }
 
-bool testGetNull(bool DEBUG_PRINT_MESSAGES){
+bool testGetNull(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing getting something that isn't in the cache"<<std::endl;
-    auto my_cache = makeCache();
+    auto my_cache = makeCache(host, port);
     Cache::size_type size;
     auto ret = (my_cache->get("pear", size));
+    delete my_cache;
     if (ret == nullptr){
         return true;
     }
     return false;
 }
 
-bool testDel(bool DEBUG_PRINT_MESSAGES){
+bool testDel(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing that a deleted item is no longer in the cache"<<std::endl;
-    auto my_cache = makeCache();
+    auto my_cache = makeCache(host, port);
     Cache::size_type size;
+    delete my_cache;
     return ((my_cache->del("apple")) && (my_cache->get("apple", size)== nullptr));
 }
 
-bool testDelNull(bool DEBUG_PRINT_MESSAGES){
+bool testDelNull(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing deleting something that isn't in the cache"<<std::endl; 
-    auto my_cache = makeCache();
+    auto my_cache = makeCache(host, port);
+    delete my_cache;
     return !my_cache->del("pear");
 }
 
-bool testSpaceUsed(bool DEBUG_PRINT_MESSAGES){
+bool testSpaceUsed(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing to make sure that space used is equal to the space of everything we put in"<<std::endl;
-    auto my_cache = makeCache();
+    auto my_cache = makeCache(host, port);
     Cache::size_type size = 5;
     auto ret = my_cache->space_used();
     if (DEBUG_PRINT_MESSAGES) std::cout<<"ret is: "<< ret <<", size is: "<<size<<std::endl;
+    delete my_cache;
     return (ret == size);
 }
 
-bool testReset(bool DEBUG_PRINT_MESSAGES){
+bool testReset(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
     if (DEBUG_PRINT_MESSAGES) std::cout<<"Testing resetting the cache and making sure it's empty afterwards"<<std::endl;
-    auto my_cache = makeCache();
+    auto my_cache = makeCache(host, port);
     Cache::size_type size;
     if (DEBUG_PRINT_MESSAGES) std::cout<<"Cache created"<<std::endl;
     my_cache->reset();
     if (DEBUG_PRINT_MESSAGES) std::cout<<"Cache reset"<<std::endl;
     auto ret = (my_cache->get("apple", size));
     if (DEBUG_PRINT_MESSAGES) std::cout<<"Ret gotten"<<std::endl;
+    delete my_cache;
     if ((ret == nullptr) && (my_cache->space_used() == 0)){
         return true;
     }
@@ -75,10 +83,10 @@ bool testReset(bool DEBUG_PRINT_MESSAGES){
 }
 
 //should try putting in something with the same key to see what happens
-bool testSameKey(bool DEBUG_PRINT_MESSAGES)
+bool testSameKey(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port)
 {
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing putting something into the array that a key already exists for"<<std::endl;
-    auto my_cache = makeCache();
+    auto my_cache = makeCache(host, port);
     char value[]{ "six" };
     Cache::size_type size;
     my_cache->set("apple", value, 4);
@@ -87,15 +95,16 @@ bool testSameKey(bool DEBUG_PRINT_MESSAGES)
     if (DEBUG_PRINT_MESSAGES) {
         std::cout << ret << std::endl;
     }
+    delete my_cache;
     return (p == "six");
 }
 
 
 // this test should fill up the array, then use the evictor to remove something to put something new in
-bool testEvictorWithFullCache(bool DEBUG_PRINT_MESSAGES)
+bool testEvictorWithFullCache(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port)
 {
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing evicting from a full array and putting something new in"<<std::endl;
-    auto my_cache = makeCache();
+    auto my_cache = makeCache(host, port);
     // i like bridge
     char spades[]{ "AK10xxx" };
     my_cache->set("spades", spades, 8);
@@ -131,16 +140,17 @@ bool testEvictorWithFullCache(bool DEBUG_PRINT_MESSAGES)
     bool diamonds_in_cache = (diamonds_gotten_str == "KJxx");
     bool spades_not_in_cache = (spades_gotten == nullptr);
 
+    delete my_cache;
     return (hearts_in_cache && diamonds_in_cache && spades_not_in_cache);
 
 }
 
 //test cache evictor where evictor needs to evict multiple items
 //evicts the same item twice
-bool testEvictorEvictingSameItemTwice(bool DEBUG_PRINT_MESSAGES)
+bool testEvictorEvictingSameItemTwice(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port)
 {
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing what happens when the same key is in the evictor twice, and we need to remove things twice."<<std::endl;
-    auto my_cache = makeCache();
+    auto my_cache = makeCache(host, port);
     char value[]{ "six" };
     my_cache->set("apple", value, 4);
 
@@ -171,6 +181,7 @@ bool testEvictorEvictingSameItemTwice(bool DEBUG_PRINT_MESSAGES)
 
     if(DEBUG_PRINT_MESSAGES) std::cout<<"this also tests that evictor tries again if there still isn't room for the next item"<<std::endl;
 
+    delete my_cache;
     return (oranges == "two" && size ==4);
 
 }
@@ -200,15 +211,15 @@ int main(int argc, char** argv)
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    assert(testGet(false));
-    assert(testGetNull(false));
-    assert(testDel(false));
-    assert(testDelNull(false));
-    assert(testSpaceUsed(false));
-    assert(testReset(false));
-    assert(testSameKey(false));
-    assert(testEvictorWithFullCache(false));
-    assert(testEvictorEvictingSameItemTwice(false));
+    assert(testGet(false, server_ip, port));
+    assert(testGetNull(false, server_ip, port));
+    assert(testDel(false, server_ip, port));
+    assert(testDelNull(false, server_ip, port));
+    assert(testSpaceUsed(false, server_ip, port));
+    assert(testReset(false, server_ip, port));
+    assert(testSameKey(false, server_ip, port));
+    assert(testEvictorWithFullCache(false, server_ip, port));
+    assert(testEvictorEvictingSameItemTwice(false, server_ip, port));
 
     std::cout<<"all tests pass!"<<std::endl;
     return 0;

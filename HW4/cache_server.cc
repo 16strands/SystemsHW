@@ -34,6 +34,7 @@
 #include <boost/asio/dispatch.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/config.hpp>
+#include <boost/beast/http/field.hpp>
 #include <algorithm>
 #include <cstdlib>
 #include <functional>
@@ -140,7 +141,7 @@ handle_request(
 
     // Respond to GET request
     if(req.method() == http::verb::get) {
-        key_type key = req.target().substr(1);
+        std::string key(req.target().data());
         Cache::size_type size;
         Cache::val_type val = cache_root.get(key, size);
         if (val != nullptr) {
@@ -161,7 +162,7 @@ handle_request(
     // Respond to PUT request
     if (req.method() == http::verb::put){
         // Get the key and value out of request object
-        key_type key = req.target().substr(1);
+        std::string key(req.target().data());
         std::string value = key.substr(key.find("/") + 1);
         char* val = new char[value.size() + 1];
         std::strcpy(val, value.c_str());
@@ -184,7 +185,7 @@ handle_request(
 
     // Respond to DELETE request
     if(req.method() == http::verb::delete_) {
-        key_type key = req.target().substr(1);
+        std::string key(req.target().data());
         bool success = cache_root.del(key);
         if (success) {
             http::response <http::empty_body> res{http::status::accepted, req.version()};
@@ -211,7 +212,7 @@ handle_request(
     }
 
     if(req.method() == http::verb::post) {
-        std::string request_target = req.target().substr(1);
+        std::string request_target(req.target().data());
         if (request_target == "reset") {
             cache_root.reset();
             if (cache_root.space_used() == 0) {
@@ -468,6 +469,7 @@ private:
             std::make_shared<session>(
                 std::move(socket),
                 cache_root_)->run();
+            std::cout<<"Server connected "<<std::endl;
         }
 
         // Accept another connection
