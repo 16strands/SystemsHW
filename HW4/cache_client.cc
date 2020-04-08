@@ -51,7 +51,11 @@ public:
         std::cout<<"Client connected "<<std::endl;
     }
 
-    ~Impl(){
+    ~Impl()
+    {}
+
+    void close()
+    {
         beast::error_code ec;
 
         stream.socket().shutdown(tcp::socket::shutdown_both, ec);
@@ -59,12 +63,12 @@ public:
         // not_connected happens sometimes so don't bother reporting it.
         if(ec && ec != beast::errc::not_connected)
             fail(ec, "shutdown");
-        }
+    }
 
-    void
-    fail(beast::error_code ec, char const* what)	{
-
-        std::cerr << what << ": " 	<< ec.message() << "\n";	}
+    void fail(beast::error_code ec, char const* what)	
+    {
+        std::cerr << what << ": " 	<< ec.message() << "\n";
+    }
 
 
     void set(key_type key, Cache::val_type val, Cache::size_type size)
@@ -209,6 +213,7 @@ Cache::Cache(size_type maxmem,
 }
 
 Cache::~Cache() {
+    pImpl_->close();
 }
 
 void Cache::set(key_type key, val_type val, size_type size)
