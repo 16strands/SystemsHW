@@ -298,7 +298,7 @@ class session : public std::enable_shared_from_this<session>
 
     beast::tcp_stream stream_;
     beast::flat_buffer buffer_;
-    std::shared_ptr<Cache> cache_root_;
+    std::shared_ptr<Cache> cache_root_;// = std::make_shared<Cache>(); //idk when the arguments go in
     http::request<http::string_body> req_;
     std::shared_ptr<void> res_;
     send_lambda lambda_;
@@ -544,7 +544,7 @@ int main(int argc, char** argv){
     auto const address = net::ip::make_address(server);
 
     //instead of a document, we have a cache
-    std::shared_ptr<Cache> cache_root(new Cache(maxmem,0.75,fifo_evictor));
+    std::shared_ptr<Cache> cache_root = std::make_shared<Cache>( maxmem,0.75,fifo_evictor);
 
     // The io_context is required for all I/O
     net::io_context ioc{threads};
