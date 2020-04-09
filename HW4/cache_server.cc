@@ -141,6 +141,7 @@ handle_request(
 
     // Respond to GET request
     if(req.method() == http::verb::get) {
+        std::cout<<"server responding to GET request"<<std::endl;
         std::string key(req.target().data());
         key = key.substr(1);
         Cache::size_type size;
@@ -163,6 +164,7 @@ handle_request(
 
     // Respond to PUT request
     if (req.method() == http::verb::put){
+        std::cout<<"server responding to PUT request"<<std::endl;
         // Get the key and value out of request object
         std::string key(req.target().data());
         key = key.substr(1);
@@ -190,6 +192,7 @@ handle_request(
 
     // Respond to DELETE request
     if(req.method() == http::verb::delete_) {
+        std::cout<<"server responding to DELETE_ request"<<std::endl;
         std::string key(req.target().data());
         key = key.substr(1);
         bool success = cache_root.del(key);
@@ -209,6 +212,7 @@ handle_request(
 
     // Respond to HEAD request
     if(req.method() == http::verb::head) {
+        std::cout<<"server responding to HEAD request"<<std::endl;
         http::response<http::empty_body> res{http::status::accepted, req.version()};
         res.insert("space_used", cache_root.space_used());
         res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
@@ -220,6 +224,7 @@ handle_request(
     }
 
     if(req.method() == http::verb::post) {
+        std::cout<<"server responding to POST request"<<std::endl;
         std::string request_target(req.target().data());
         request_target = request_target.substr(1);
         if (request_target == "reset") {
