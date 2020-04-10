@@ -142,21 +142,37 @@ handle_request(
     // Respond to GET request
     if(req.method() == http::verb::get) {
         std::cout<<"server responding to GET request"<<std::endl;
-        std::string key(req.target().data());
-        key = key.substr(1);
+        std::string key = std::string(req.target()).substr(1);
+//        std::cout<<"This is the key before substringing ["<<key<<"]"<<std::endl;
+//        key = key.substr(1);
+        std::cout<<"This is the key on server side  ["<<key<<"]"<<std::endl;
         Cache::size_type size;
+        std::cout<<"sGET 1"<<std::endl;
         Cache::val_type val = cache_root.get(key, size);
+        std::cout<<"sGET 2"<<std::endl;
         if (val != nullptr) {
+            std::cout<<"sGET 3"<<std::endl;
             http::response <http::file_body> res{http::status::ok, req.version()};
+            std::cout<<"sGET 4"<<std::endl;
             res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+            std::cout<<"sGET 5"<<std::endl;
             std::string value(val);
-            std::string content = "{ \"" + key + "\" : \"" + value + "\" }";\
+            std::cout<<"sGET 6"<<std::endl;
+            std::string content = "{ \"" + key + "\" : \"" + value + "\" }";
+            std::cout<<"sGET 7"<<std::endl;
+            std::cout<<"CONTENT: ["<<content<<"]"<<std::endl;
             res.set(http::field::body, content);
+            std::cout<<"sGET 8"<<std::endl;
             res.insert("space_used", cache_root.space_used());
+            std::cout<<"sGET 9"<<std::endl;
             res.set(http::field::content_type, "application/json");
+            std::cout<<"sGET 10"<<std::endl;
             res.content_length(content.size() + 1);
+            std::cout<<"sGET 11"<<std::endl;
             res.keep_alive(req.keep_alive());
+            std::cout<<"sGET 12"<<std::endl;
             res.prepare_payload();
+            std::cout<<"sGET 13"<<std::endl;
             return send(std::move(res));
         }
         return send(not_found(key));
@@ -166,26 +182,30 @@ handle_request(
     if (req.method() == http::verb::put){
         std::cout<<"server responding to PUT request"<<std::endl;
         // Get the key and value out of request object
-        std::string key(req.target().data());
-        key = key.substr(1);
+        std::string key = std::string(req.target()).substr(1);
         std::string value = key.substr(key.find("/") + 1);
-        char* val = new char[value.size() + 1];
-        std::strcpy(val, value.c_str());
+        char* val = new char[value.size()+1];
+        for (unsigned long i = 0; i< value.size(); i++){
+            val[i] = value.at(i);
+        }
+        val[value.size()] = '\0';
         key = key.substr(0,key.find("/"));
         // put them in the cache
         Cache::size_type size = value.size() + 1;
         std::cout<<"PUT key is "<<key<<" val is "<<val<<std::endl;
         cache_root.set(key, val, size);
-        Cache::size_type other_size;
-        if ((cache_root.get(key, other_size) != nullptr) && (other_size == size)){
-            http::response<http::empty_body> res{http::status::created, req.version()};
-            res.set(http::field::content_type, "application/json");
-            res.insert("space_used", cache_root.space_used());
-//            res.content_length(0);
-            res.keep_alive(req.keep_alive());
-            res.prepare_payload();
-            return send(std::move(res));
-        }
+//        Cache::size_type other_size;
+//        auto get_ret = cache_root.get(key, other_size);
+//        if ((get_ret != nullptr) && (other_size == size)){
+//            std::cout<<get_ret<<std::endl;
+//            http::response<http::empty_body> res{http::status::created, req.version()};
+//            res.set(http::field::content_type, "application/json");
+//            res.insert("space_used", cache_root.space_used());
+//            res.content_length(size);
+//            res.keep_alive(req.keep_alive());
+//            res.prepare_payload();
+//            return send(std::move(res));
+//        }
         return send(server_error(key));
 
     }
@@ -277,13 +297,15 @@ class session : public std::enable_shared_from_this<session>
             // The lifetime of the message has to extend
             // for the duration of the async operation so
             // we use a shared_ptr to manage it.
-//            std::cout<<"sending  "<<msg.body()<<std::endl;
+            std::cout<<"SEND 1"<<std::endl;
             auto sp = std::make_shared<
                 http::message<isRequest, Body, Fields>>(std::move(msg));
+            std::cout<<"SEND 2"<<std::endl;
 
             // Store a type-erased version of the shared
             // pointer in the class to keep it alive.
             self_.res_ = sp;
+            std::cout<<"SEND 3"<<std::endl;
 
             // Write the response
             http::async_write(
@@ -293,6 +315,7 @@ class session : public std::enable_shared_from_this<session>
                     &session::on_write,
                     self_.shared_from_this(),
                     sp->need_eof()));
+            std::cout<<"SEND 4"<<std::endl;
         }
     };
 

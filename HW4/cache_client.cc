@@ -100,6 +100,7 @@ public:
         http::request<http::empty_body> req;
         req.version(11);
         req.method(http::verb::get);
+        std::cout<<"Key on client side  ["<<key<<"]"<<std::endl;
         req.target("/"+key);
         req.set(http::field::host, host_);
         req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
