@@ -53,7 +53,6 @@ public:
 
     ~Impl()
     {
-        std::cout<<"Killing the impl"<<std::endl;
         beast::error_code ec;
 
         stream.socket().shutdown(tcp::socket::shutdown_both, ec);
@@ -106,29 +105,22 @@ public:
         req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
         (void) val_size;
-        std::cout<<"GET 1"<<std::endl;
         http::write(stream, req);
-        std::cout<<"GET 2"<<std::endl;
 
         // This buffer is used for reading and must be persisted
         beast::flat_buffer buffer;
-        std::cout<<"GET 3"<<std::endl;
 
         // Declare a container to hold the response
         http::response<http::dynamic_body> res;
-        std::cout<<"GET 4"<<std::endl;
 
         // Receive the HTTP response
         http::read(stream, buffer, res);
-        std::cout<<"GET 5"<<std::endl;
 
         
         // Write the message to standard out
         std::string body = boost::beast::buffers_to_string(res.body().data());
-        std::cout<<"GET 6"<<std::endl;
 
         std::string value = body.substr(body.find(":")+2,body.size()-3);
-        std::cout<<"GET 7"<<std::endl;
         return value;
     }
 
