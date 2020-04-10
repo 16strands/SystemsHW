@@ -178,16 +178,16 @@ bool testEvictorEvictingSameItemTwice(bool DEBUG_PRINT_MESSAGES)
 // Run all tests
 // Change to true for debugging print statements
 int main(){
-    assert(testGet(false));
-    assert(testGetNull(false));
-    assert(testDel(false));
-    assert(testDelNull(false));
-    assert(testSpaceUsed(false));
-    assert(testReset(false));
-    assert(testSameKey(false));
-    assert(testEvictorWithFullCache(false));
-    assert(testEvictorEvictingSameItemTwice(false));
+    if (testGet == (false)) std::cout << "test get failed"<<std::endl;
+    if (testGetNull == (false)) std::cout << "test getnull failed"<<std::endl;
+    if (testDel == (false))std::cout << "test del failed"<<std::endl;
+    if (testDelNull == (false))std::cout << "test delnull failed"<<std::endl;
+    if (testSpaceUsed == (false))std::cout << "test spaceused failed"<<std::endl;
+    if (testReset == (false))std::cout << "test reset failed"<<std::endl;
+    if (testSameKey == (false))std::cout << "test samekey failed"<<std::endl;
+    if (testEvictorWithFullCache == (false)) std::cout << "test evictorwithfulcache failed"<<std::endl;
+    if (testEvictorEvictingSameItemTwice == (false))std::cout << "test evictingsameitemtwice failed"<<std::endl;
 
-    std::cout<<"all tests pass!"<<std::endl;
+    std::cout<<"all tests ran!"<<std::endl;
     return 0;
 }
