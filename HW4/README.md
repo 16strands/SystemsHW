@@ -8,12 +8,16 @@ This is our implementation of the TCP server and client. Please read the known b
 make should compile things. Then, run ./cache_server in one terminal, and ./test_cache_client in another terminal. They should talk to one another! there are also some fancy command line options you can make use of:
 
 for cache_server:
-    -m    maxmem: sets your cache size 
-    -s    server address: this is the ip address used in our endpoint for the listener
-    -p    port: this is the port we listen on
-    -t    threads: this is how many threads we use 👀👀
+
+      -m    maxmem: sets your cache size 
+      -s    server address: this is the ip address used in our endpoint for the listener
+      -p    port: this is the port we listen on
+      -t    threads: this is how many threads we use 👀👀
+    
+    
     
 for test_cache_client:
+
     -s    server address: this is the address of the server we will contact about our cache
     -p    port: this is the port that we will contact about our cache
 
