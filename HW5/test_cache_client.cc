@@ -40,9 +40,7 @@ bool testGetNull(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing getting something that isn't in the cache"<<std::endl;
     Cache* my_cache = makeCache(host, port);
     Cache::size_type size;
-    std::cout<<"getNull 1"<<std::endl;
     if (my_cache && !my_cache->get("pear", size)){
-        std::cout<<"getNull 2"<<std::endl;
         delete my_cache;
         return true;
     }
@@ -76,10 +74,12 @@ bool testDelNull(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
 bool testSpaceUsed(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing to make sure that space used is equal to the space of everything we put in"<<std::endl;
     auto my_cache = makeCache(host, port);
-    Cache::size_type size = 4;
+    Cache::size_type size = 4; //to do: find out why this breaks when running on a server that hasn't been reset
     Cache::size_type ret = my_cache->space_used();
     if (DEBUG_PRINT_MESSAGES) std::cout<<"ret is: "<< ret <<", size is: "<<size<<std::endl;
+    my_cache->reset();
     delete my_cache;
+    //std::cout<<"SPACE USED IS:"<<ret<<std::endl;
     return (ret == size);
 }
 
@@ -92,8 +92,10 @@ bool testReset(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
     if (DEBUG_PRINT_MESSAGES) std::cout<<"Cache reset"<<std::endl;
     auto ret = (my_cache->get("apple", size));
     if (DEBUG_PRINT_MESSAGES) std::cout<<"Ret gotten"<<std::endl;
+    
+    bool space_used_is_zero = my_cache->space_used() == 0;
     delete my_cache;
-    if ((ret == nullptr) && (my_cache->space_used() == 0)){
+    if ((ret == nullptr) && space_used_is_zero){
         return true;
     }
     return false;
@@ -113,6 +115,7 @@ bool testSameKey(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port)
         std::cout << ret << std::endl;
     }
     delete my_cache;
+    delete ret;
     return (p == "six");
 }
 
@@ -157,7 +160,13 @@ bool testEvictorWithFullCache(bool DEBUG_PRINT_MESSAGES, std::string host, std::
     bool diamonds_in_cache = (diamonds_gotten_str == "KJxx");
     bool spades_not_in_cache = (spades_gotten == nullptr);
 
+    std::cout <<"size of cache is " << my_cache -> space_used();
+    std::cout <<"hearts in cache? "<<hearts_in_cache <<"diamonds_in_cache? "<<diamonds_in_cache<<"spades NOT in cache? (should be true) " <<spades_not_in_cache<<std::endl;
+
     delete my_cache;
+    delete hearts_gotten;
+    delete diamonds_gotten;
+    delete spades_gotten;
     return (hearts_in_cache && diamonds_in_cache && spades_not_in_cache);
 
 }
@@ -185,7 +194,7 @@ bool testEvictorEvictingSameItemTwice(bool DEBUG_PRINT_MESSAGES, std::string hos
     auto apples_from_cache = (my_cache->get("apple", size));
 
     //check that apples is not in the cache
-    if (DEBUG_PRINT_MESSAGES && !(apples_from_cache == nullptr && bananas == "three" && size == 6)) std::cout<<"the first evict failed"<<std::endl;
+    if (DEBUG_PRINT_MESSAGES && !(apples_from_cache == nullptr && bananas == "three" && size == 6)) std::cout<<"the first evict FAILED"<<std::endl;
 
     //now for the second evict
     char number_of_oranges[]{ "two" };
@@ -229,31 +238,31 @@ int main(int argc, char** argv)
     po::notify(vm);
 
     std::cout<<"running testGet"<<std::endl;
-    if (testGet(false, server_ip, port) == false) std::cout << "test get failed"<<std::endl;
+    if (testGet(false, server_ip, port) == false) std::cout << "test get FAILED"<<std::endl;
     else std::cout<<"test get success!!"<<std::endl;
     std::cout<<"running testGetNull"<<std::endl;
-    if (testGetNull(false, server_ip, port) == (false)) std::cout << "test getnull failed"<<std::endl;
+    if (testGetNull(false, server_ip, port) == (false)) std::cout << "test getnull FAILED"<<std::endl;
     else std::cout<<"test getnull success!!"<<std::endl;
     std::cout<<"running testDel"<<std::endl;
-    if (testDel(false, server_ip, port) == (false))std::cout << "test del failed"<<std::endl;
+    if (testDel(false, server_ip, port) == (false))std::cout << "test del FAILED"<<std::endl;
     else std::cout<<"test del success!!"<<std::endl;
     std::cout<<"running testDelNull"<<std::endl;
-    if (testDelNull(false, server_ip, port) == (false))std::cout << "test delnull failed"<<std::endl;
+    if (testDelNull(false, server_ip, port) == (false))std::cout << "test delnull FAILED"<<std::endl;
     else std::cout<<"test del null success!!"<<std::endl;
     std::cout<<"running testSpaceUsed"<<std::endl;
-    if (testSpaceUsed(false, server_ip, port) == (false))std::cout << "test spaceused failed"<<std::endl;
+    if (testSpaceUsed(false, server_ip, port) == (false))std::cout << "test spaceused FAILED"<<std::endl;
     else std::cout<<"test space used success!!"<<std::endl;
     std::cout<<"running testReset"<<std::endl;
-    if (testReset(false, server_ip, port) == (false))std::cout << "test reset failed"<<std::endl;
+    if (testReset(false, server_ip, port) == (false))std::cout << "test reset FAILED"<<std::endl;
     else std::cout<<"test reset success!!"<<std::endl;
     std::cout<<"running testSameKey"<<std::endl;
-    if (testSameKey(false, server_ip, port) == (false))std::cout << "test samekey failed"<<std::endl;
+    if (testSameKey(false, server_ip, port) == (false))std::cout << "test samekey FAILED"<<std::endl;
     else std::cout<<"test same key success!!"<<std::endl;
     std::cout<<"running testEvictorWithFullCache"<<std::endl;
-    if (testEvictorWithFullCache(false, server_ip, port) == (false)) std::cout << "test evictorwithfulcache failed"<<std::endl;
+    if (testEvictorWithFullCache(false, server_ip, port) == (false)) std::cout << "test evictorwithfulcache FAILED"<<std::endl;
     else std::cout<<"test evict full cache success!!"<<std::endl;
     std::cout<<"running testEvictorEvictingSameItemTwice"<<std::endl;
-    if (testEvictorEvictingSameItemTwice(false, server_ip, port) == (false))std::cout << "test evictingsameitemtwice failed"<<std::endl;
+    if (testEvictorEvictingSameItemTwice(false, server_ip, port) == (false))std::cout << "test evictingsameitemtwice FAILED"<<std::endl;
     else std::cout<<"test evict same item twice success!!"<<std::endl;
 
 

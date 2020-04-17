@@ -344,6 +344,8 @@ public:
         beast::error_code ec;
         stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
 
+        cache_root_.reset();
+
         // At this point the connection is closed gracefully
     }
 };

@@ -60,6 +60,7 @@ public:
             //if there's an evictor, use it!
             if (mEvictor) mEvictor->touch_key(key);
 
+            std::cout <<"adding " << size << " to memory_used ,whcih be " << memory_used<<std::endl;
             memory_used += size;
 
 		}
@@ -106,6 +107,7 @@ public:
 
 	Cache::size_type space_used() 
 	{
+		std::cout<<"space used is" <<memory_used<<std::endl;
 	    return memory_used;
 	}
 

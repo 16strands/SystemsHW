@@ -56,7 +56,7 @@ public:
         beast::error_code ec;
 
         stream.socket().shutdown(tcp::socket::shutdown_both, ec);
-        std::cout<<"Shutdown"<<std::endl;
+        //std::cout<<"Shutdown"<<std::endl;
 
         // not_connected happens sometimes so don't bother reporting it.
         if(ec && ec != beast::errc::not_connected)
@@ -99,7 +99,7 @@ public:
         http::request<http::empty_body> req;
         req.version(11);
         req.method(http::verb::get);
-        std::cout<<"Key on client side  ["<<key<<"]"<<std::endl;
+        //std::cout<<"Key on client side  ["<<key<<"]"<<std::endl;
         req.target("/"+key);
         req.set(http::field::host, host_);
         req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
@@ -123,11 +123,10 @@ public:
         
         // Write the message to standard out
         std::string body = boost::beast::buffers_to_string(res.body().data());
-        std::cout<<"body: ["<<body<<"]"<<std::endl;
+        //std::cout<<"body: ["<<body<<"]"<<std::endl;
 
         const std::string val_str = "value: \"";
         auto start = body.find(val_str);
-        std::cout<<"start: "<<start<<std::endl;
         if (start == std::string::npos) {
             return nullptr;
         } else {
@@ -179,14 +178,11 @@ public:
 
         // This buffer is used for reading and must be persisted
         beast::flat_buffer buffer;
-        std::cout<<"space used 2!!!"<<std::endl;
         // Declare a container to hold the response
         http::response<http::dynamic_body> res;
-        std::cout<<"space used 3!!!"<<std::endl;
         // Receive the HTTP response
 
         http::read(stream, buffer, res);
-        std::cout<<"space used 4!!!"<<std::endl;
         
         
 
@@ -202,7 +198,7 @@ public:
             start_iterator++;
         }
 
-        std::cout << "size is " <<sz<<std::endl;
+        //std::cout << "size is " <<sz<<std::endl;
         return sz;
 
         //return std::stoi(size_of_cache);
@@ -250,7 +246,7 @@ Cache::Cache(size_type maxmem,
 }
 
 Cache::~Cache() {
-    std::cout<<"deleting cache"<<std::endl;
+    //std::cout<<"deleting cache"<<std::endl;
 }
 
 void Cache::set(key_type key, val_type val, size_type size)
@@ -264,8 +260,8 @@ Cache::val_type Cache::get(key_type key, size_type& val_size) const
 {
     val_type gotten = pImpl_->get(key,val_size);
 
-    if (!gotten) std::cout<<"got a val of nullptr for key: "<<key<<std::endl;
-    else std::cout<<"gotten a val of \""<<gotten<<"\" for key: "<<key<<std::endl;
+    //if (!gotten) std::cout<<"got a val of nullptr for key: "<<key<<std::endl;
+    //else std::cout<<"gotten a val of \""<<gotten<<"\" for key: "<<key<<std::endl;
     return gotten;
 }
 
