@@ -125,6 +125,7 @@ bool testEvictorWithFullCache(bool DEBUG_PRINT_MESSAGES, std::string host, std::
 {
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing evicting from a full array and putting something new in"<<std::endl;
     auto my_cache = makeCache(host, port);
+    my_cache -> reset();
     // i like bridge
     char spades[]{ "AK10xxx" };
     my_cache->set("spades", spades, 8);
@@ -160,9 +161,8 @@ bool testEvictorWithFullCache(bool DEBUG_PRINT_MESSAGES, std::string host, std::
     bool diamonds_in_cache = (diamonds_gotten_str == "KJxx");
     bool spades_not_in_cache = (spades_gotten == nullptr);
 
-    std::cout <<"size of cache is " << my_cache -> space_used();
-    std::cout <<"hearts in cache? "<<hearts_in_cache <<"diamonds_in_cache? "<<diamonds_in_cache<<"spades NOT in cache? (should be true) " <<spades_not_in_cache<<std::endl;
 
+    
     delete my_cache;
     delete hearts_gotten;
     delete diamonds_gotten;
@@ -259,7 +259,7 @@ int main(int argc, char** argv)
     if (testSameKey(false, server_ip, port) == (false))std::cout << "test samekey FAILED"<<std::endl;
     else std::cout<<"test same key success!!"<<std::endl;
     std::cout<<"running testEvictorWithFullCache"<<std::endl;
-    if (testEvictorWithFullCache(false, server_ip, port) == (false)) std::cout << "test evictorwithfulcache FAILED"<<std::endl;
+    if (testEvictorWithFullCache(false, server_ip, port) == (false)) std::cout << "test evictorwithfulcache FAILED\n >>>THIS TEST ONLY PASSES IF SERVER'S -m MAXMEM IS LESS THAN 16<<"<<std::endl;
     else std::cout<<"test evict full cache success!!"<<std::endl;
     std::cout<<"running testEvictorEvictingSameItemTwice"<<std::endl;
     if (testEvictorEvictingSameItemTwice(false, server_ip, port) == (false))std::cout << "test evictingsameitemtwice FAILED"<<std::endl;
