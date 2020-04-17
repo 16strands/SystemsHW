@@ -15,7 +15,7 @@
 #include <algorithm>
 #include <iostream>
 #include <cassert>
-
+#include <charconv>
 using cache_val_type = std::shared_ptr<Cache::byte_type>;
 using map_val_type = std::pair<Cache::size_type,cache_val_type>;
 
@@ -138,7 +138,9 @@ public:
         std::string get_str = body.substr(start, end - start);
         val_size = get_str.size() + 1;
 
-        return (char*) get_str.c_str();
+        
+
+        return strdup(get_str.c_str());
     }
 
     bool del(key_type key)
@@ -183,7 +185,14 @@ public:
         // Receive the HTTP response
         http::read(stream, buffer, res);
 
-        return std::stoi( std::string(res["space_used"]));
+        std::string size_of_cache(res["Space-Used"]);
+
+        const auto res_str = res.at("Space-Used");
+        int sz = 0;
+        std::from_chars(res_str.data(), res_str.data() + res_str.size(), sz);
+        return sz;
+
+        //return std::stoi(size_of_cache);
         
     }
 
@@ -240,7 +249,11 @@ void Cache::set(key_type key, val_type val, size_type size)
 
 Cache::val_type Cache::get(key_type key, size_type& val_size) const
 {
-    return pImpl_ -> get(key, val_size);
+    val_type gotten = pImpl_->get(key,val_size);
+
+    if (!gotten) std::cout<<"got a val of nullptr for key: "<<key<<std::endl;
+    else std::cout<<"gotten a val of \""<<gotten<<"\" for key: "<<key<<std::endl;
+    return gotten;
 }
 
 bool Cache::del(key_type key)

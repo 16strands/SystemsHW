@@ -7,6 +7,8 @@
 #include <cassert>
 #include <boost/program_options.hpp>
 
+bool DEBUG = true;
+
 namespace po = boost::program_options;
 
 //creates a socket to the server
@@ -21,16 +23,17 @@ bool testGet(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing putting and getting something from the cache"<<std::endl;
     auto my_cache = makeCache(host, port);
     Cache::size_type size;
-    auto p = (my_cache->get("apple", size));
+    Cache::val_type p = (my_cache->get("apple", size));
     if (DEBUG_PRINT_MESSAGES) {
         std::cout << p << std::endl;
     }
-    try{
-        delete my_cache;
-    }
-    catch (int e){
-    }
-    return (strcmp(p, "six")==0);
+    
+    delete my_cache;
+    std::cout<<"comparing \"six\" to \"" << p <<"\""<<std::endl;
+    char six[]{"six"};
+    bool success = (strcmp(p, six)==0);
+    delete p;
+    return success;
 }
 
 bool testGetNull(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
@@ -38,7 +41,7 @@ bool testGetNull(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
     Cache* my_cache = makeCache(host, port);
     Cache::size_type size;
     std::cout<<"getNull 1"<<std::endl;
-    if (my_cache && my_cache->get("pear", size)){
+    if (my_cache && !my_cache->get("pear", size)){
         std::cout<<"getNull 2"<<std::endl;
         delete my_cache;
         return true;
@@ -51,22 +54,30 @@ bool testDel(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing that a deleted item is no longer in the cache"<<std::endl;
     auto my_cache = makeCache(host, port);
     Cache::size_type size;
+    
+    bool removed_apple =(my_cache->del("apple")); 
+    Cache::val_type apple_val = my_cache->get("apple", size);
+    bool apple_is_nullptr = (!apple_val);
+    bool success = ( removed_apple&& apple_is_nullptr);
+
+    if (!apple_is_nullptr) delete apple_val;
     delete my_cache;
-    return ((my_cache->del("apple")) && (my_cache->get("apple", size)== nullptr));
+    return success;
 }
 
 bool testDelNull(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing deleting something that isn't in the cache"<<std::endl; 
     auto my_cache = makeCache(host, port);
+    bool success = my_cache->del("pear");
     delete my_cache;
-    return !my_cache->del("pear");
+    return success;
 }
 
 bool testSpaceUsed(bool DEBUG_PRINT_MESSAGES, std::string host, std::string port){
     if (DEBUG_PRINT_MESSAGES) std::cout<<"testing to make sure that space used is equal to the space of everything we put in"<<std::endl;
     auto my_cache = makeCache(host, port);
-    Cache::size_type size = 5;
-    auto ret = my_cache->space_used();
+    Cache::size_type size = 4;
+    Cache::size_type ret = my_cache->space_used();
     if (DEBUG_PRINT_MESSAGES) std::cout<<"ret is: "<< ret <<", size is: "<<size<<std::endl;
     delete my_cache;
     return (ret == size);
@@ -219,22 +230,31 @@ int main(int argc, char** argv)
 
     std::cout<<"running testGet"<<std::endl;
     if (testGet(false, server_ip, port) == false) std::cout << "test get failed"<<std::endl;
+    else std::cout<<"test get success!!"<<std::endl;
     std::cout<<"running testGetNull"<<std::endl;
     if (testGetNull(false, server_ip, port) == (false)) std::cout << "test getnull failed"<<std::endl;
-    std::cout<<"running tesDel"<<std::endl;
+    else std::cout<<"test getnull success!!"<<std::endl;
+    std::cout<<"running testDel"<<std::endl;
     if (testDel(false, server_ip, port) == (false))std::cout << "test del failed"<<std::endl;
+    else std::cout<<"test del success!!"<<std::endl;
     std::cout<<"running testDelNull"<<std::endl;
     if (testDelNull(false, server_ip, port) == (false))std::cout << "test delnull failed"<<std::endl;
+    else std::cout<<"test del null success!!"<<std::endl;
     std::cout<<"running testSpaceUsed"<<std::endl;
     if (testSpaceUsed(false, server_ip, port) == (false))std::cout << "test spaceused failed"<<std::endl;
+    else std::cout<<"test space used success!!"<<std::endl;
     std::cout<<"running testReset"<<std::endl;
     if (testReset(false, server_ip, port) == (false))std::cout << "test reset failed"<<std::endl;
+    else std::cout<<"test reset success!!"<<std::endl;
     std::cout<<"running testSameKey"<<std::endl;
     if (testSameKey(false, server_ip, port) == (false))std::cout << "test samekey failed"<<std::endl;
+    else std::cout<<"test same key success!!"<<std::endl;
     std::cout<<"running testEvictorWithFullCache"<<std::endl;
     if (testEvictorWithFullCache(false, server_ip, port) == (false)) std::cout << "test evictorwithfulcache failed"<<std::endl;
+    else std::cout<<"test evict full cache success!!"<<std::endl;
     std::cout<<"running testEvictorEvictingSameItemTwice"<<std::endl;
     if (testEvictorEvictingSameItemTwice(false, server_ip, port) == (false))std::cout << "test evictingsameitemtwice failed"<<std::endl;
+    else std::cout<<"test evict same item twice success!!"<<std::endl;
 
 
     std::cout<<"all tests pass!"<<std::endl;
