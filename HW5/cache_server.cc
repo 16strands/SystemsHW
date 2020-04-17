@@ -167,6 +167,7 @@ handle_request(Cache& cache, http::request<Body, http::basic_fields<Allocator>>&
     }
 
     else if (req.method() == http::verb::head) {
+        //res = response_t(http::status::ok, version);
         res.body() = "";
     }
 
@@ -264,6 +265,9 @@ public:
         // on the I/O objects in this session. Although not strictly necessary
         // for single-threaded contexts, this example code is written to be
         // thread-safe by default.
+
+//        do_read();        
+
         net::dispatch(stream_.get_executor(),
                       beast::bind_front_handler(
                           &session::do_read,

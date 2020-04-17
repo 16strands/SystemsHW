@@ -15,7 +15,7 @@
 #include <algorithm>
 #include <iostream>
 #include <cassert>
-#include <charconv>
+
 using cache_val_type = std::shared_ptr<Cache::byte_type>;
 using map_val_type = std::pair<Cache::size_type,cache_val_type>;
 
@@ -174,22 +174,34 @@ public:
         req.set(http::field::host, host_);
         req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
+        std::cout<<"space used 1!!!"<<std::endl;
         http::write(stream, req);
 
         // This buffer is used for reading and must be persisted
         beast::flat_buffer buffer;
-
+        std::cout<<"space used 2!!!"<<std::endl;
         // Declare a container to hold the response
         http::response<http::dynamic_body> res;
-
+        std::cout<<"space used 3!!!"<<std::endl;
         // Receive the HTTP response
         http::read(stream, buffer, res);
-
-        std::string size_of_cache(res["Space-Used"]);
+        std::cout<<"space used 4!!!"<<std::endl;
+        
+        
 
         const auto res_str = res.at("Space-Used");
         int sz = 0;
-        std::from_chars(res_str.data(), res_str.data() + res_str.size(), sz);
+
+        auto start_iterator = res_str.data();
+
+        while (start_iterator <res_str.data() + res_str.size())
+        {
+            char num = *start_iterator;
+            sz = (sz * 10) + num - 48;
+            start_iterator++;
+        }
+
+        std::cout << "size is " <<sz<<std::endl;
         return sz;
 
         //return std::stoi(size_of_cache);
