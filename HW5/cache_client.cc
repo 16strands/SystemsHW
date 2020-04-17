@@ -173,8 +173,8 @@ public:
         req.method(http::verb::head);
         req.set(http::field::host, host_);
         req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+        req.target("/");
 
-        std::cout<<"space used 1!!!"<<std::endl;
         http::write(stream, req);
 
         // This buffer is used for reading and must be persisted
@@ -184,6 +184,7 @@ public:
         http::response<http::dynamic_body> res;
         std::cout<<"space used 3!!!"<<std::endl;
         // Receive the HTTP response
+
         http::read(stream, buffer, res);
         std::cout<<"space used 4!!!"<<std::endl;
         
