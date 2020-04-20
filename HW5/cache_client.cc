@@ -137,7 +137,6 @@ public:
         std::string get_str = body.substr(start, end - start);
         val_size = get_str.size() + 1;
 
-        
 
         return strdup(get_str.c_str());
     }
