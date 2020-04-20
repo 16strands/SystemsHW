@@ -5,7 +5,10 @@ LIBS=-pthread
 OBJ=$(SRC:.cc=.o)
 BOOSTLIB=-L/usr/local/Cellar/boost/1.72.0_1/lib -lboost_program_options
 
-all:  cache_server test_cache_client
+all:  cache_server test_cache_client workload_test
+
+workload_test: workload_test.o cache_client.o
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LIBS) $(BOOSTLIB)
 
 cache_server: cache_server.o cache.o fifo_evictor.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LIBS) $(BOOSTLIB)
