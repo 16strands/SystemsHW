@@ -1,5 +1,4 @@
 #include "cache.hh"
-#include "fifo_evictor.hh"
 
 #include <iostream>
 #include <cstring>
@@ -10,7 +9,7 @@
 #include <chrono>
 #include <boost/math/distributions/skew_normal.hpp>
 #include <random>
-
+#include <fstream>
 
 bool DEBUG = true;
 
@@ -92,8 +91,11 @@ Cache* makeWarmCache(std::string host, std::string port, int num_requests)
         //make keys
         std::string key = "key" + std::to_string(i);
 
+        std::cout <<"adding key "<<key <<" to cache"<<std::endl;
+
         int size_of_val = 0;
         auto value  = get_value(size_of_val);
+        std::cout <<"the val is "<<value <<std::endl;
 
         my_cache->set(key, value, size_of_val);
     }
@@ -198,15 +200,40 @@ float timed_gets(std::string host, std::string port, int num_requests, double fr
     //we need to pass this as an arg to my_cache->get
     Cache::size_type size_of_val = 0;
 
+    std::vector<int> count(num_kv_pairs,0);
+
     //we did this in the first hw...........
     auto startTime = std::chrono::high_resolution_clock::now();
     
     
-    for(int i = 0; i < num_kv_pairs; i++){
-        auto value = (my_cache->get(get_requests[i], size_of_val)); 
-        (void) value;       
+
+    for(int i = 0; i < num_requests; i++){
+        auto key = "key"+get_requests[i];
+        std::cout <<"i is "<<i<<std::endl;
+        std::cout<<"key is :" <<key <<std::endl;
+        auto value = (my_cache->get(key, size_of_val)); 
+        
+        std::cout <<"just got [" <<value<<"]"<<std::endl;
+        delete value;
+        count[std::stoi(get_requests[i])] ++;
     }
+
     auto endTime = std::chrono::high_resolution_clock::now();
+
+    std::cout<<"num vals is" <<num_kv_pairs<<std::endl;
+    //std::cout<<"value is "<<value<<std::endl; 
+
+    std::ofstream debug_file_stream;
+
+    debug_file_stream.open("keys_and_how_frequently_they_are_getted.txt");
+
+    for (int i = 0; i < num_kv_pairs; i++)
+    {
+        std::cout<<i<<"\t" <<count[i] <<std::endl;
+        debug_file_stream << i<<"\t" <<count[i] <<std::endl;
+
+    }
+    debug_file_stream.close();
 
     float t = std::chrono::duration_cast<std::chrono::microseconds>( endTime - startTime ).count();
     return t;
@@ -255,9 +282,9 @@ int main(int argc, char** argv)
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    int num_requests = 100;
+    int num_requests = 1'000;
 
-    timed_gets(server_ip, port,  num_requests);
+    std::cout<<timed_gets(server_ip, port,  num_requests);
 
     return 0;
 
