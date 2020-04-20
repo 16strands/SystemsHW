@@ -91,15 +91,50 @@ Cache* makeWarmCache(std::string host, std::string port, int num_requests)
         //make keys
         std::string key = "key" + std::to_string(i);
 
-        std::cout <<"adding key "<<key <<" to cache"<<std::endl;
+        if (DEBUG) std::cout <<"adding key "<<key <<" to cache"<<std::endl;
 
         int size_of_val = 0;
+
         auto value  = get_value(size_of_val);
-        std::cout <<"the val is "<<value <<std::endl;
+        
+        if (DEBUG) std::cout <<"the val is "<<value <<std::endl;
 
         my_cache->set(key, value, size_of_val);
     }
     return my_cache;
+}
+
+//this randomly updates key 
+std::vector<std::string> random_update_requests(int num_update_requests, int num_kv_pairs)
+{
+    std::vector<std::string> set_requests;
+
+
+    std::mt19937 generator(rd());
+    std::uniform_int_distribution<int> random_key(0,num_kv_pairs);
+    //for however many set requests there, are, it'll update a random key
+    for (int i = 0; i < num_update_requests; i++)
+    {
+        set_requests.push_back(std::to_string(random_key));
+    }
+    return set_requests;
+}
+
+
+//this generates deletes, It doesn't take into account deleting the same 
+//object twice, because that should probably be handled
+std::vector<std::string> random_del_requests(int num_del_requests, int num_kv_pairs)
+{
+    std::vector<std::string> del_requests;
+
+    std::mt19937 generator(rd());
+    std::uniform_int_distribution<int> random_key(0,num_kv_pairs);
+    //for however many set requests there, are, it'll update a random key
+    for (int i = 0; i < num_del_requests; i++)
+    {
+        del_requests.push_back(std::to_string(random_key));
+    }
+    return del_requests;
 }
 
 
@@ -107,7 +142,7 @@ Cache* makeWarmCache(std::string host, std::string port, int num_requests)
 // 10% of unique keys make up 90% of total requests
 // 40% of unique keys make up 9% of total requests
 // 50% of unique keys make up 1% of total requests
-std::vector<std::string> random_get_requests(int num_requests, int num_kv_pairs)
+std::vector<std::string> random_get_requests(int num_get_requests, int num_kv_pairs)
 {
     // taking into account reuse of keys:
     // key number is indicative of how popular it is, so key_1 is most popular, and key_num_requests is least popular
@@ -143,7 +178,7 @@ std::vector<std::string> random_get_requests(int num_requests, int num_kv_pairs)
 
     //what about compound keys?
     // this is for you to think about, grader.
-    for(int i = 0; i < num_requests; i++) 
+    for(int i = 0; i < num_get_requests; i++) 
     {
 
         //how this works is a random number is generated.
@@ -178,7 +213,12 @@ std::vector<std::string> random_get_requests(int num_requests, int num_kv_pairs)
 
 
 
-float timed_gets(std::string host, std::string port, int num_requests, double freq_of_gets = frequency_of_gets, double freq_of_del = frequency_of_dels, double freq_of_updates = frequency_of_updates)
+float timed_gets(std::string host, 
+            std::string port, 
+            int num_requests, 
+            double freq_of_gets = frequency_of_gets, 
+            double freq_of_del = frequency_of_dels, 
+            double freq_of_updates = frequency_of_updates)
 {
 
     (void) freq_of_updates;
@@ -209,27 +249,22 @@ float timed_gets(std::string host, std::string port, int num_requests, double fr
 
     for(int i = 0; i < num_requests; i++){
         auto key = "key"+get_requests[i];
-        std::cout <<"i is "<<i<<std::endl;
-        std::cout<<"key is :" <<key <<std::endl;
         auto value = (my_cache->get(key, size_of_val)); 
-        
-        std::cout <<"just got [" <<value<<"]"<<std::endl;
         delete value;
         count[std::stoi(get_requests[i])] ++;
     }
 
     auto endTime = std::chrono::high_resolution_clock::now();
 
-    std::cout<<"num vals is" <<num_kv_pairs<<std::endl;
-    //std::cout<<"value is "<<value<<std::endl; 
-
+    if (DEBUG)std::cout<<"num vals is" <<num_kv_pairs<<std::endl;
+    
     std::ofstream debug_file_stream;
 
     debug_file_stream.open("keys_and_how_frequently_they_are_getted.txt");
 
     for (int i = 0; i < num_kv_pairs; i++)
     {
-        std::cout<<i<<"\t" <<count[i] <<std::endl;
+        if (DEBUG) std::cout<<i<<"\t" <<count[i] <<std::endl;
         debug_file_stream << i<<"\t" <<count[i] <<std::endl;
 
     }
@@ -241,13 +276,28 @@ float timed_gets(std::string host, std::string port, int num_requests, double fr
 
 
 
+float timed_all_requests(std::string host, 
+            std::string port, 
+            int num_requests,  
+            double freq_of_gets = frequency_of_gets, 
+            double freq_of_del = frequency_of_dels, 
+            double freq_of_updates = frequency_of_updates)
+{
+    Cache* my_cache = makeWarmCache(host, port, num_requests);
 
+    int num_kv_pairs = num_requests * ratio_of_keys_to_requests;
 
+    int num_update_requests = num_requests * freq_of_updates;
+    int num_get_requests = num_requests * freq_of_gets;
+    int num_del_requests = num_requests * freq_of_del;
 
+    std::vector<std::string> get_requests = random_get_requests(num_get_requests,num_kv_pairs);
+    std::vector<std::string> update_requests = random_update_requests(num_update_requests,num_kv_pairs);
+    std::vector<std::string> del_requests = random_del_requests(num_del_requests,num_kv_pairs);
 
+    
 
-
-
+}
 
 
 
