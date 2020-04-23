@@ -3,6 +3,13 @@ Sarah Strand and Ariel Flaster
 
 This is our implementation of the TCP server and client. Please read the known bugs. We're sooo close. Please have mercy.
 
+
+
+For numbers similar to the etc in Eitan's paper, run with cache size 1767000. This results in a hit rate of about 81% on average.
+
+`./server_cache -m 17670000`
+
+
 ### How to run:
 
 make should compile things. Then, run ./cache_server in one terminal, and ./test_cache_client in another terminal. They should talk to one another! there are also some fancy command line options you can make use of:
