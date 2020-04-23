@@ -41,6 +41,8 @@ public:
 	void set(key_type key, Cache::val_type val, Cache::size_type size)
 	{
 
+
+
 	    // Don't allow items that are bigger than the cache, or else everything will get evicted and the new item will not be added
 	    if (size > mMaxmem){
 	        return;
@@ -67,6 +69,8 @@ public:
 
 		}
 		else if(mEvictor){
+
+
 			// if there's no room, and an evictor, use the evictor!
 
 			// first, pop something from the evictor.
@@ -86,6 +90,7 @@ public:
 	cache_val_type get(key_type key, size_type& val_size)
 	{
 	    if (mCache.find(key) != mCache.cend()){
+	    	if (mEvictor) mEvictor->touch_key(key);
 	        auto ret = mCache[key].second;
 	        val_size = mCache[key].first;
 	        return ret;

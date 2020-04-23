@@ -10,8 +10,10 @@
 #include <boost/math/distributions/skew_normal.hpp>
 #include <random>
 #include <fstream>
+#include <algorithm>
 
-bool DEBUG = true;
+
+bool DEBUG = false;
 
 namespace po = boost::program_options;
 
@@ -86,7 +88,7 @@ Cache* makeWarmCache(std::string host, std::string port, int num_requests)
     
     int num_keys = ratio_of_keys_to_requests * num_requests;
     Cache* my_cache = new Cache(host, port);
-    for (int i = 0; i < num_keys; i++)
+    for (int i = num_keys-1; i >= 0; i--)
     {
         //make keys
         std::string key = "key" + std::to_string(i);
@@ -100,6 +102,8 @@ Cache* makeWarmCache(std::string host, std::string port, int num_requests)
         if (DEBUG) std::cout <<"the val is "<<value <<std::endl;
 
         my_cache->set(key, value, size_of_val);
+        //do we need to delete value here? TO DO 
+        //EITAN HELP!
     }
     return my_cache;
 }
@@ -115,7 +119,7 @@ std::vector<std::string> random_update_requests(int num_update_requests, int num
     //for however many set requests there, are, it'll update a random key
     for (int i = 0; i < num_update_requests; i++)
     {
-        set_requests.push_back(std::to_string(random_key));
+        set_requests.push_back(std::to_string(random_key(generator)));
     }
     return set_requests;
 }
@@ -132,7 +136,7 @@ std::vector<std::string> random_del_requests(int num_del_requests, int num_kv_pa
     //for however many set requests there, are, it'll update a random key
     for (int i = 0; i < num_del_requests; i++)
     {
-        del_requests.push_back(std::to_string(random_key));
+        del_requests.push_back(std::to_string(random_key(generator)));
     }
     return del_requests;
 }
@@ -198,6 +202,19 @@ std::vector<std::string> random_get_requests(int num_get_requests, int num_kv_pa
 
 }
 
+std::vector<std::string> list_of_random_values(int num_values){
+    std::vector<std::string> list_of_values;
+
+    int size = 0;
+
+    for(int i = 0; i < num_values; i++)
+    {
+        std::string val (get_value(size));
+        list_of_values.push_back(val);
+    }
+    return list_of_values;
+}
+
 
 //make a list of requests
 //generate request
@@ -242,19 +259,26 @@ float timed_gets(std::string host,
 
     std::vector<int> count(num_kv_pairs,0);
 
+    double num_hits = 0;
+
     //we did this in the first hw...........
     auto startTime = std::chrono::high_resolution_clock::now();
     
-    
+
 
     for(int i = 0; i < num_requests; i++){
         auto key = "key"+get_requests[i];
         auto value = (my_cache->get(key, size_of_val)); 
+        if(value) num_hits++;
         delete value;
-        count[std::stoi(get_requests[i])] ++;
+//        count[std::stoi(get_requests[i])] ++;
     }
 
     auto endTime = std::chrono::high_resolution_clock::now();
+
+    double hit_rate = num_hits/num_requests;
+
+    std::cout<<"hit rate is "<<hit_rate<<std::endl;
 
     if (DEBUG)std::cout<<"num vals is" <<num_kv_pairs<<std::endl;
     
@@ -273,7 +297,6 @@ float timed_gets(std::string host,
     float t = std::chrono::duration_cast<std::chrono::microseconds>( endTime - startTime ).count();
     return t;
 }
-
 
 
 float timed_all_requests(std::string host, 
@@ -295,10 +318,72 @@ float timed_all_requests(std::string host,
     std::vector<std::string> update_requests = random_update_requests(num_update_requests,num_kv_pairs);
     std::vector<std::string> del_requests = random_del_requests(num_del_requests,num_kv_pairs);
 
+    enum request_type { get, set, del };
+
+    using request_pair_t = std::pair<request_type, std::string>;
+    std::vector<request_pair_t> requests;
+
+
+    //thiscould be odne sooomuch cleaner if the random_[type]_requests returned pairs.
+    for (auto i : get_requests){
+        requests.push_back(request_pair_t(request_type::get,i));
+    }
+
+    for (auto i : update_requests){
+        requests.push_back(request_pair_t(request_type::set,i));
+    }
+
+    for (auto i : del_requests){
+        requests.push_back(request_pair_t(request_type::del,i));
+    }
+
+    //shuffle
+    std::random_shuffle (requests.begin(),requests.end());
+
+    Cache::size_type size_of_val = 0; 
+
+    //we should already have a list of random values generated for whenever we need to update a kv
+    std::vector<std::string> random_values = list_of_random_values(update_requests.size());
+    int random_val_idx = 0;
+
+    double num_hits = 0;
+
+    //start the timer
+    auto startTime = std::chrono::high_resolution_clock::now();
+
+    for (auto i : requests)
+    {
+        if (i.first == request_type::get){
+            auto key = "key"+i.second;
+            auto value = (my_cache->get(key, size_of_val)); 
+            if(value) num_hits++;
+            delete value;
+        }
+
+        if (i.first == request_type::set){
+            auto key = "key"+i.second;
+            auto val = random_values [random_val_idx];
+            int size = val.size(); 
+            random_val_idx++;
+            my_cache->set(key, val.c_str(), size+1);
+            //do we need to delete val.c_str?????????
+
+        }
+
+        if (i.first == request_type::del){
+            my_cache->del(i.second); 
+        }
+    }
+    auto endTime = std::chrono::high_resolution_clock::now();
     
+    double hit_rate = num_hits/num_get_requests;
 
+    std::cout<<"hit rate is "<<hit_rate<<std::endl;
+
+    float t = std::chrono::duration_cast<std::chrono::microseconds>( endTime - startTime ).count();
+
+    return t;
 }
-
 
 
 
@@ -332,9 +417,11 @@ int main(int argc, char** argv)
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    int num_requests = 1'000;
+    int num_requests = 100'000;
 
-    std::cout<<timed_gets(server_ip, port,  num_requests);
+    //std::cout<<timed_gets(server_ip, port,  num_requests);
+
+    std::cout<<timed_all_requests(server_ip, port,  num_requests)<<" is the time in microseconds"<<std::endl;
 
     return 0;
 

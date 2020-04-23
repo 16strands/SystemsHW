@@ -17,6 +17,7 @@ class Cache {
   class Impl;
   std::unique_ptr<Impl> pImpl_;
 
+
  public:
   using byte_type = char;
   using val_type = const byte_type*;   // Values for K-V pairs

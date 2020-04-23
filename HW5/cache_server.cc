@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 
 #include "cache.hh"
-#include "fifo_evictor.hh"
+#include "lru_evictor.hh"
 
 #include <boost/program_options.hpp>
 #include <boost/beast/core.hpp>
@@ -479,8 +479,8 @@ int main(int argc, char** argv){
     po::notify(vm);
 
 
-    //make fifo evictor
-    Fifo_Evictor* fifo_evictor = new Fifo_Evictor();
+    //make LRU evictor
+    LRUEvictor* lru_evictor = new LRUEvictor();
     //here we make the cache
 //    Cache server_cache = Cache(maxmem,0.75,fifo_evictor);
 
@@ -488,7 +488,7 @@ int main(int argc, char** argv){
     auto const address = net::ip::make_address(server);
 
     //instead of a document, we have a cache
-    std::shared_ptr<Cache> cache_root = std::make_shared<Cache>( maxmem,0.75,fifo_evictor);
+    std::shared_ptr<Cache> cache_root = std::make_shared<Cache>( maxmem,0.75,lru_evictor);
 
     // The io_context is required for all I/O
     net::io_context ioc{threads};

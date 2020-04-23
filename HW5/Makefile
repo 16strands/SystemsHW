@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-Wall -Wextra -Werror -std=c++17 -O0 -g
+CXXFLAGS=-Wall -Wextra -Werror -std=c++17 -O3
 LDFLAGS=$(CXXFLAGS)
 LIBS=-pthread
 OBJ=$(SRC:.cc=.o)
@@ -10,7 +10,7 @@ all:  cache_server test_cache_client workload_test
 workload_test: workload_test.o cache_client.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LIBS) $(BOOSTLIB)
 
-cache_server: cache_server.o cache.o fifo_evictor.o
+cache_server: cache_server.o cache.o lru_evictor.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LIBS) $(BOOSTLIB)
 
 test_cache_client: test_cache_client.o cache_client.o
