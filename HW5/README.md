@@ -23,6 +23,7 @@ for workload_test:
       -s    server address: this is the server we're going to listen to
       -p    port: this is the port we'll listen to   
 
+make sure to use cache_server with a maxmem arg of 17670000 for the hit rate to replicate the paper!
 
 ### TCP Server
 
