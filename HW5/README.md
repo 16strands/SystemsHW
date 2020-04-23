@@ -27,6 +27,8 @@ make sure to use cache_server with a maxmem arg of 10,000,000 for the hit rate t
 
 ### Making the warm cache:
 
+20.4% of total number of requests was the number we used as number of unique keys.
+
 We did a cool mathematical model to simulate the lengths of values for items in the cache. The paper said that, for ETC, the average value size was 150 with value sizes ranging from 1 to 5k. We used a boost library for skewed distribution to accurately replicate this.
 
 ### Total requests:
@@ -70,15 +72,24 @@ To test throughput, we tried to find how many requests from as many clients as p
 
 This was done with -O0.
 
-|num clients (total number of requests)|avg time per client| throughput (requests per second)|
+|num clients (requests per client)|avg time per client| throughput (requests per second)|
 |----|----|----|
 |1 (100k)| 20 sec |5,000|
-|2 (200k)| 32 sec| 6,000|
-|3 (300k) | 48 sec | 6,250|
-|4 (400k) | 63 sec| 6,300|
+|2 (100k)| 32 sec| 6,000|
+|3 (100k) | 48 sec | 6,250|
+|4 (100k) | 63 sec| 6,300|
 
 ##### All kinds of requests:
 
-This was done with -O3.
+This was done with -O3. The hit rate decreased with the addition of each new client. We tried changing the total number of requests, so that each client would do a smaller amount of deletes, and keep the hit rate up. Even though we fixed the number of key value pairs to be the same 20.7% of total requests (even among all clients), we still saw decreasing hit rates.
 
-|Num clients (total number of requests)| avg time it took for each client| |
+
+|Num clients (requests per client)| avg time per client| throughput (requests per second)|hit rate|
+|-|-|-|-|
+|1 (100k)| 10 sec |10k|81%|
+|2 (100k)| 12 sec| 16k|<44%|
+|3 (100k) | 16 sec | 19k|<16%|
+|4 (100k) | 18 sec| 22k|<18%|
+|1 (100k)| 7 sec |14 k|81%|
+|2 (50k)| 4 sec| 12 k|<70%|
+|4 (25k) | 2.7 sec|9 k|<40%|
