@@ -93,3 +93,8 @@ This was done with -O3. The hit rate decreased with the addition of each new cli
 |1 (100k)| 7 sec |14 k|81%|
 |2 (50k)| 4 sec| 12 k|<70%|
 |4 (25k) | 2.7 sec|9 k|<40%|
+
+
+### Baseline_latencies
+
+running baseline latencies produces times.txt
