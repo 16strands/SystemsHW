@@ -53,7 +53,11 @@ public:
             //first we ned to add something to the heap
             //this needs to point to a new thing in the heap
             mMax_load_factor = 3.0f;
+            
             cache_val_type new_cache_item_pointer(new byte_type[size]);
+
+            // delete the key and val if they're already in the cache
+            del(key);
 
             //now we need to copy val into new_cache_item_pointer
             std::copy(val, val+size, new_cache_item_pointer.get());
