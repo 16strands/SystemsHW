@@ -382,7 +382,7 @@ void baseline_latency (std::string host,
 
     debug_file_stream<< "Title\tmin\tavg\tmax" <<std::endl;
     
-    debug_file_stream<<min <<avg <<max <<std::endl;
+    debug_file_stream<<"gets"<<"\t"<<min<<"\t" <<avg <<"\t"<<max <<std::endl;
 
     
 
@@ -400,7 +400,7 @@ void baseline_latency (std::string host,
     }
     avg = avg/ static_cast<float>(num_trials);
 
-    debug_file_stream<<min <<avg <<max <<std::endl;
+    debug_file_stream<<"updates\t"<<min<<"\t"<<avg<<"\t" <<max <<std::endl;
 
 //now dels
     min =999999;
@@ -416,7 +416,7 @@ void baseline_latency (std::string host,
     }
     avg = avg/ static_cast<float>(num_trials);
 
-    debug_file_stream<<min <<avg <<max <<std::endl;
+    debug_file_stream<<"dels\t"<<min<<"\t" <<avg <<"\t"<<max <<std::endl;
 
 
     debug_file_stream.close();
