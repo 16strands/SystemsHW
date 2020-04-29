@@ -17,7 +17,8 @@ bool DEBUG = false;
 
 namespace po = boost::program_options;
 
-
+bool FORCE_SET_NUM_KEYS = true;
+int NUM_KEYS = 20'700;
 
 //calculate how many unique queries there are 
 //this can be changed to look at performance of stuff
@@ -25,8 +26,8 @@ namespace po = boost::program_options;
 double ratio_of_keys_to_requests = 0.207; // for every key, there are 2 requests
 //TO DO! find out what real ratio of keys to requests is
 
-double frequency_of_gets = 0.66;
-double frequency_of_dels = 0.15;
+double frequency_of_gets = .66;
+double frequency_of_dels = 0.05;
 double frequency_of_updates = 0.29;
 
 
@@ -87,6 +88,8 @@ Cache* makeWarmCache(std::string host, std::string port, int num_requests)
 {
     
     int num_keys = ratio_of_keys_to_requests * num_requests;
+    if (FORCE_SET_NUM_KEYS) num_keys = NUM_KEYS;
+
     Cache* my_cache = new Cache(host, port);
     for (int i = num_keys-1; i >= 0; i--)
     {
@@ -245,7 +248,7 @@ float timed_gets(std::string host,
     Cache* my_cache = makeWarmCache(host, port, num_requests);
 
     int num_kv_pairs = num_requests * ratio_of_keys_to_requests;
-
+    if (FORCE_SET_NUM_KEYS) num_kv_pairs = NUM_KEYS;
 
     std::vector<std::string> get_requests = random_get_requests(num_requests,num_kv_pairs);
 
@@ -298,7 +301,6 @@ float timed_gets(std::string host,
     return t;
 }
 
-
 float timed_all_requests(std::string host, 
             std::string port, 
             int num_requests,  
@@ -307,8 +309,10 @@ float timed_all_requests(std::string host,
             double freq_of_updates = frequency_of_updates)
 {
     Cache* my_cache = makeWarmCache(host, port, num_requests);
+    
 
     int num_kv_pairs = num_requests * ratio_of_keys_to_requests;
+    if (FORCE_SET_NUM_KEYS) num_kv_pairs = NUM_KEYS;
 
     int num_update_requests = num_requests * freq_of_updates;
     int num_get_requests = num_requests * freq_of_gets;
@@ -417,7 +421,7 @@ int main(int argc, char** argv)
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    int num_requests = 100'000;
+    int num_requests = 25'000;
 
     //std::cout<<timed_gets(server_ip, port,  num_requests);
 
