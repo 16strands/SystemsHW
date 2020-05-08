@@ -1,4 +1,4 @@
-# Let's Network!
+# Multithreading
 Sarah Strand and Ariel Flaster
 
 
