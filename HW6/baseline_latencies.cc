@@ -11,6 +11,7 @@
 #include <random>
 #include <fstream>
 #include <algorithm>
+#include <thread>
 
 
 bool DEBUG = false;
@@ -264,7 +265,7 @@ float timed_gets(Cache* my_cache,
 
     for(int i = 0; i < num_requests; i++){
         auto key = "key"+get_requests[i];
-        auto value = (my_cache->get(key, size_of_val)); 
+        auto value = (my_cache->get(key, size_of_val));
         if(value) num_hits++;
         delete value;
 //        count[std::stoi(get_requests[i])] ++;
@@ -353,11 +354,10 @@ float timed_dels(std::string host, std::string port,
 
 //this takes an nreq (number requests) and outputs information about mode, average, 
 // quartiles, for time latencies for gets, updates, and dels!
-void baseline_latency (Cache* my_cache,
-            int num_requests)
+void baseline_latency (std::string host, std::string port,
+            int num_requests, int num_trials)
 {
-    
-    int num_trials = 5;
+    Cache* my_cache = new Cache(host, port);
 
     float min =999999;
     float max =0;
@@ -365,7 +365,7 @@ void baseline_latency (Cache* my_cache,
     for (int i = 0; i < num_trials; i++)
     {
         float time = timed_gets(my_cache, num_requests);
-
+        std::cout<<"time for gets is: "<<time<<std::endl;
         if (time < min) min = time;
         if (time > max) max = time;
         avg+=time;
@@ -382,8 +382,10 @@ void baseline_latency (Cache* my_cache,
     debug_file_stream<< "Title\tmin\tavg\tmax" <<std::endl;
     
     debug_file_stream<<"gets"<<"\t"<<min<<"\t" <<avg <<"\t"<<max <<std::endl;
+    std::cout<<"gets timing"<<"\tmin: "<<min<<"\tavg: " <<avg <<"\tmax: "<<max <<std::endl;
 
-    
+
+
 
 //now for updates
     min =999999;
@@ -400,6 +402,8 @@ void baseline_latency (Cache* my_cache,
     avg = avg/ static_cast<float>(num_trials);
 
     debug_file_stream<<"updates\t"<<min<<"\t"<<avg<<"\t" <<max <<std::endl;
+    std::cout<<"updates timing"<<"\tmin: "<<min<<"\tavg: " <<avg <<"\tmax: "<<max <<std::endl;
+
 
 //now dels
     min =999999;
@@ -407,7 +411,7 @@ void baseline_latency (Cache* my_cache,
     avg = 0;
     for (int i = 0; i < num_trials; i++)
     {
-        float time = timed_dels(host, port,num_requests);
+        float time = timed_dels(host, port, num_requests);
 
         if (time < min) min = time;
         if (time > max) max = time;
@@ -416,6 +420,7 @@ void baseline_latency (Cache* my_cache,
     avg = avg/ static_cast<float>(num_trials);
 
     debug_file_stream<<"dels\t"<<min<<"\t" <<avg <<"\t"<<max <<std::endl;
+    std::cout<<"dels timing"<<"\tmin: "<<min<<"\tavg: " <<avg <<"\tmax: "<<max <<std::endl;
 
 
     debug_file_stream.close();
@@ -429,20 +434,21 @@ void baseline_latency (Cache* my_cache,
 void threaded_performance(std::string host, 
             std::string port, 
             int num_requests,
-            int num_threads)
+            int num_threads,
+            int num_trials)
 {
     Cache* my_cache = makeWarmCache(host, port, num_requests);
 
 
 
-    vector<thread> threads;
+    std::vector<std::thread> threads;
 
     for (int thread_id = 0; thread_id < num_threads;)
     {
         threads.push_back(
             std::thread([&, num_requests](){
                 baseline_latency(
-                    my_cache, num_requests);}));
+                    host, port, num_requests, num_trials);}));
         thread_id++;
     }
     
@@ -462,24 +468,23 @@ int main(int argc, char** argv)
     std::string server_ip;
     std::string port;
     int nreq;
+    int nthreads;
+    int ntrials;
 
     // optional command line arguments with flags and default values
     // got this logic from https://stackoverflow.com/questions/11280136/optional-command-line-arguments
     po::options_description desc("Options for my program");
     desc.add_options()
         // Option 'server' and 's' are equivalent.
-        ("server_ip,s", po::value<std::string>(& server_ip)->default_value("127.0.0.1"),
-         "server address")
+        ("server_ip,s", po::value<std::string>(& server_ip)->default_value("127.0.0.1"), "server address")
         // Option 'port' and 'p' are equivalent.
-        ("port,p", po::value<std::string>(& port)->default_value("2020"),
-         "port number")
+        ("port,p", po::value<std::string>(& port)->default_value("2020"), "port number")
         // Option nreq
         // Option 'port' and 'p' are equivalent.
-        ("nreq,r", po::value<int>(& nreq)->default_value(100000),
-         "number requests")
+        ("nreq,r", po::value<int>(& nreq)->default_value(100000), "number requests")
+        ("nthreads,t", po::value<int>(& nthreads)->default_value(1), "number threads")
+        ("trials,tr", po::value<int>(& ntrials)->default_value(4), "number of trials")
 
-        //frequency of updates TO DO
-        //("u_freq", po::value<std::string()>)
         ;
 
     po::variables_map vm;
@@ -490,7 +495,7 @@ int main(int argc, char** argv)
 
     //std::cout<<timed_gets(server_ip, port,  num_requests);
 
-    baseline_latency(server_ip, port, nreq);
+    threaded_performance(server_ip, port, nreq, nthreads, ntrials);
     return 0;
 
 }

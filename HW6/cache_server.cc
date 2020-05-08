@@ -139,6 +139,7 @@ post_request(Cache& cache, const std::string target)
         return response_t(http::status::not_found, version);
     }
 
+    std::cout<<"client told me to reset"<<std::endl;
     cache.reset();
     return response_t(http::status::ok, version);
 }
@@ -282,7 +283,7 @@ public:
         req_ = {};
 
         // Set the timeout.
-        stream_.expires_after(std::chrono::seconds(30));
+        stream_.expires_after(std::chrono::seconds(3000));
 
         // Read a request
         http::async_read(stream_, buffer_, req_,
@@ -340,6 +341,7 @@ public:
     void
     do_close()
     {
+        std::cout<<"closing server"<<std::endl;
         // Send a TCP shutdown
         beast::error_code ec;
         stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
@@ -461,7 +463,7 @@ int main(int argc, char** argv){
     po::options_description desc("Options for my program");
     desc.add_options()
             // Option 'maxmem' and 'm' are equivalent.
-            ("maxmem,m", po::value<int>(& maxmem)->default_value(65536),
+            ("maxmem,m", po::value<int>(& maxmem)->default_value(10'000'000),
              "cache size")
             // Option 'server' and 's' are equivalent.
             ("server,s", po::value<std::string>(& server)->default_value("127.0.0.1"),
@@ -489,6 +491,7 @@ int main(int argc, char** argv){
 
     //instead of a document, we have a cache
     std::shared_ptr<Cache> cache_root = std::make_shared<Cache>( maxmem,0.75,lru_evictor);
+    std::cout<<"making a new cache"<<std::endl;
 
     // The io_context is required for all I/O
     net::io_context ioc{threads};
