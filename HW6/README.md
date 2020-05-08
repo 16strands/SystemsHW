@@ -29,6 +29,6 @@ for baseline_latencies:
 
 this is an updated version of HW5's baseline latencies that works with as many threads as you want it to. We added a new function, threaded_performance that creates a warm cache in the server, then makes threads each with its own cache that performs trials on the server. Each thread does trial number gets, updates, and dels. then, the times of each threads trials are printed to the terminal.
 
-### The server already works in parallel because Sarah and I have foresight
+### The server already works in parallel because we have foresight
 
 :)
