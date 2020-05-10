@@ -1,0 +1,4 @@
+Title	min	avg	max
+gets	10677	10865.2	11230
+updates	22160	22950	24763
+dels	9582	9635	9662
