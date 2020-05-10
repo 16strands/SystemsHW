@@ -12,7 +12,7 @@
 #include <fstream>
 #include <algorithm>
 #include <thread>
-
+#include <mutex>
 
 bool DEBUG = false;
 
@@ -84,12 +84,12 @@ char* get_value(int& size){
 
 }
 
-
+std::mutex cache_warming_mutex;
 
 
 Cache* makeWarmCache(std::string host, std::string port, int num_requests)
 {
-    
+    std::lock_guard<std::mutex> guard(cache_warming_mutex);
     int num_keys = ratio_of_keys_to_requests * num_requests;
     if (FORCE_SET_NUM_KEYS) num_keys = NUM_KEYS;
 
@@ -263,6 +263,7 @@ float timed_gets(Cache* my_cache,
     
 
 
+
     for(int i = 0; i < num_requests; i++){
         auto key = "key"+get_requests[i];
         auto value = (my_cache->get(key, size_of_val));
@@ -323,11 +324,11 @@ float timed_updates(Cache* my_cache,
     return t;
 }
 
-float timed_dels(std::string host, std::string port,
+float timed_dels(Cache* my_cache,
             int num_requests)
 {
 
-    Cache* my_cache = makeWarmCache(host, port, num_requests);
+    //Cache* my_cache = makeWarmCache(host, port, num_requests);
     int num_kv_pairs = num_requests * ratio_of_keys_to_requests;
     if (FORCE_SET_NUM_KEYS) num_kv_pairs = NUM_KEYS;
 
@@ -345,7 +346,7 @@ float timed_dels(std::string host, std::string port,
 
     auto endTime = std::chrono::high_resolution_clock::now();
 
-    delete my_cache;
+   
     float t = std::chrono::duration_cast<std::chrono::milliseconds>( endTime - startTime ).count();
     return t;
 }
@@ -411,11 +412,11 @@ void baseline_latency (std::string host, std::string port,
     avg = 0;
     for (int i = 0; i < num_trials; i++)
     {
-        float time = timed_dels(host, port, num_requests);
-
+        float time = timed_dels(my_cache, num_requests);
         if (time < min) min = time;
         if (time > max) max = time;
         avg+=time;
+        my_cache = makeWarmCache(host,port, num_requests);
     }
     avg = avg/ static_cast<float>(num_trials);
 
@@ -456,6 +457,7 @@ void threaded_performance(std::string host,
     {
         threads[thread].join();
     }
+    (void) my_cache;
 }
 
 
@@ -483,7 +485,7 @@ int main(int argc, char** argv)
         // Option 'port' and 'p' are equivalent.
         ("nreq,r", po::value<int>(& nreq)->default_value(100000), "number requests")
         ("nthreads,t", po::value<int>(& nthreads)->default_value(1), "number threads")
-        ("trials,tr", po::value<int>(& ntrials)->default_value(4), "number of trials")
+        ("trials,l", po::value<int>(& ntrials)->default_value(4), "number of trials")
 
         ;
 

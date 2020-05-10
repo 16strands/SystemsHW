@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <iostream>
 #include <cassert>
+#include <mutex>
 
 using cache_val_type = std::shared_ptr<Cache::byte_type>;
 using map_val_type = std::pair<Cache::size_type,cache_val_type>;
@@ -27,6 +28,8 @@ private:
 	hash_func mHash;
 	Cache::size_type memory_used = 0;
 	std::unordered_map<key_type, std::pair<size_type, cache_val_type>, hash_func > mCache;
+
+	std::mutex del_mutex;
 
 public:
 
@@ -104,6 +107,10 @@ public:
 
 	bool del(key_type key)
 	{
+		//locking mutex
+
+		std::lock_guard<std::mutex> guard(del_mutex);
+
 	    size_type size;
 	    cache_val_type item = get(key, size);
 	    if (item){

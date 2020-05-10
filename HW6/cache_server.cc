@@ -120,7 +120,9 @@ put_request(Cache& cache, const std::string kv)
 response_t
 delete_request(Cache& cache, const std::string key)
 {
-    const auto ok = cache.del(key);
+    
+    const bool ok = cache.del(key);
+
     if (!ok) {
         return response_t(http::status::not_found, version);
     }
@@ -145,7 +147,7 @@ post_request(Cache& cache, const std::string target)
 }
 
 
-//////////////////////////////////////////////////////////////////////////////
+
 // Handle a generic request for a given cache
 template <class Body, class Allocator, class Send>
 void
@@ -348,7 +350,7 @@ public:
 
         cache_root_-> reset();
         //to do, for some reason, the cache persists even through connection closure
-
+    
         // At this point the connection is closed gracefully
     }
 };
