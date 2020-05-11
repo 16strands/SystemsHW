@@ -29,6 +29,17 @@ for baseline_latencies:
 
 this is an updated version of HW5's baseline latencies that works with as many threads as you want it to. We added a new function, threaded_performance that creates a warm cache in the server, then makes threads each with its own cache that performs trials on the server. Each thread does trial number gets, updates, and dels. then, the times of each threads trials are printed to the terminal.
 
+Latencies for :
+
+
+Throughput:
+
 ### The server already works in parallel because we have foresight
 
-We have a lot of graphs, I have no idea how to pu tthem in here. 
+LAtencies for the server:
+![check out these latencies, eitan](https://raw.githubusercontent.com/16strands/SystemsHW/master/HW6/2_client_threads.gif)
+these are latency times for our server responding to 2 client threads. Super sick, if u ask me. 
+
+throughput for the same data:
+![Spicy](https://github.com/16strands/SystemsHW/blob/master/HW6/throughput%20for%202%20client%20threads.gif?raw=true)
+These are the numbers we got when we took the times and divided them by the number of requests asked. These are how many requests happen per second.
