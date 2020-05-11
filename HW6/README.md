@@ -31,4 +31,4 @@ this is an updated version of HW5's baseline latencies that works with as many t
 
 ### The server already works in parallel because we have foresight
 
-:)
+We have a lot of graphs, I have no idea how to pu tthem in here. 
